@@ -19,7 +19,7 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* Items List: Displays images and details of the products */}
+      {/* Items List: Displays local images with names and animations */}
       <div>
         <ItemsList />
       </div>

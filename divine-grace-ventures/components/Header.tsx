@@ -25,7 +25,7 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link href="/admin" className="flex text-black font-bold items-center space-x-1 hover:text-blue-500">
+              <Link href="/admin/login" className="flex text-black font-bold items-center space-x-1 hover:text-blue-500">
                 <FaUserShield />
                 <span>Admin</span>
               </Link>
