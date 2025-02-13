@@ -1,23 +1,48 @@
-// app/admin/login/page.tsx
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaUserShield } from 'react-icons/fa';
+import CustomLoader from '@/components/CustomLoader';
+import CustomAlert from '@/components/CustomAlert';
 
-function AdminLoginForm({ onSwitchView }: { onSwitchView: (view: 'forgot') => void }) {
+function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'forgot') => void, setLoading: (value: boolean) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
+  const router = useRouter();
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your admin login logic here (e.g., using Supabase to authenticate against the admins table)
-    console.log('Admin login:', email, password);
+    setAlert(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'error', message: data.error || 'Login failed.' });
+        setLoading(false);
+        return;
+      }
+      setAlert({ type: 'success', message: 'Admin login successful! Redirecting...' });
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/admin');
+      }, 2000);
+    } catch (error: any) {
+      setAlert({ type: 'error', message: error.message || 'Login error' });
+      setLoading(false);
+    }
   };
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
+      {alert && <CustomAlert type={alert.type} message={alert.message} />}
       <form onSubmit={handleAdminLogin} className="space-y-4">
         <div>
           <label htmlFor="admin-email" className="block mb-1">Email</label>
@@ -47,10 +72,7 @@ function AdminLoginForm({ onSwitchView }: { onSwitchView: (view: 'forgot') => vo
       </form>
       <div className="mt-4 text-center">
         <p>
-          <button
-            className="text-blue-400 hover:underline"
-            onClick={() => onSwitchView('forgot')}
-          >
+          <button className="text-blue-400 hover:underline" onClick={() => onSwitchView('forgot')}>
             Forgot Password?
           </button>
         </p>
@@ -59,18 +81,38 @@ function AdminLoginForm({ onSwitchView }: { onSwitchView: (view: 'forgot') => vo
   );
 }
 
-function AdminForgotPasswordForm({ onSwitchView }: { onSwitchView: (view: 'login') => void }) {
+function AdminForgotPasswordForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'login') => void, setLoading: (value: boolean) => void }) {
   const [email, setEmail] = useState('');
+  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
 
-  const handleForgotPassword = (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your forgot password logic here (e.g., sending an OTP or reset link)
-    console.log('Admin forgot password for:', email);
+    setAlert(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/admin/forgot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'error', message: data.error || 'Failed to reset password.' });
+        setLoading(false);
+        return;
+      }
+      setAlert({ type: 'success', message: 'Reset instructions sent to your email.' });
+      setLoading(false);
+    } catch (error: any) {
+      setAlert({ type: 'error', message: error.message || 'Error resetting password.' });
+      setLoading(false);
+    }
   };
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4 text-center">Forgot Password</h2>
+      {alert && <CustomAlert type={alert.type} message={alert.message} />}
       <form onSubmit={handleForgotPassword} className="space-y-4">
         <div>
           <label htmlFor="admin-forgot-email" className="block mb-1">Email</label>
@@ -89,10 +131,7 @@ function AdminForgotPasswordForm({ onSwitchView }: { onSwitchView: (view: 'login
       </form>
       <div className="mt-4 text-center">
         <p>
-          <button
-            className="text-blue-400 hover:underline"
-            onClick={() => onSwitchView('login')}
-          >
+          <button className="text-blue-400 hover:underline" onClick={() => onSwitchView('login')}>
             Back to Login
           </button>
         </p>
@@ -104,28 +143,30 @@ function AdminForgotPasswordForm({ onSwitchView }: { onSwitchView: (view: 'login
 export default function AdminLoginPage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<'login' | 'forgot'>('login');
+  const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
-    // Navigate back without reloading the underlying page
     router.back();
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative">
-        {/* Optional: You can add an admin icon above the close button */}
-        <div className="absolute top-2 right-2">
-          <button className="text-white text-xl" onClick={handleClose}>
-            &times;
-          </button>
+    <>
+      {loading && <CustomLoader />}
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative">
+          <div className="absolute top-2 right-2">
+            <button className="text-white text-xl" onClick={handleClose}>
+              &times;
+            </button>
+          </div>
+          {activeView === 'login' && (
+            <AdminLoginForm onSwitchView={(view) => setActiveView(view)} setLoading={setLoading} />
+          )}
+          {activeView === 'forgot' && (
+            <AdminForgotPasswordForm onSwitchView={(view) => setActiveView(view)} setLoading={setLoading} />
+          )}
         </div>
-        {activeView === 'login' && (
-          <AdminLoginForm onSwitchView={(view) => setActiveView(view)} />
-        )}
-        {activeView === 'forgot' && (
-          <AdminForgotPasswordForm onSwitchView={(view) => setActiveView(view)} />
-        )}
       </div>
-    </div>
+    </>
   );
 }
