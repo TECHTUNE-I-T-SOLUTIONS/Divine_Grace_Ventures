@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabaseClient';
 import nodemailer from 'nodemailer';
-import twilio from 'twilio';
+import africastalking from 'africastalking';
 
 const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
 
@@ -48,15 +48,23 @@ async function sendOtpEmail(email: string, otp: string) {
 }
 
 async function sendOtpSms(phone: string, otp: string) {
-  const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-  );
-  return client.messages.create({
-    body: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: phone,
-  });
+  // Configure Africa's Talking
+  const africastalkingConfig = {
+    apiKey: process.env.AT_API_KEY,
+    username: process.env.AT_USERNAME,
+  };
+  const at = africastalking(africastalkingConfig);
+  const sms = at.SMS;
+  try {
+    const response = await sms.send({
+      to: phone,
+      message: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+      // Optionally add: sender: "YourSenderID"
+    });
+    return response;
+  } catch (error: any) {
+    throw new Error(`Error sending SMS: ${error.message}`);
+  }
 }
 
 export async function POST(request: Request) {
@@ -91,7 +99,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Send OTP via email and SMS
+    // Send OTP via email and Africa's Talking SMS
     await sendOtpEmail(email, otp);
     await sendOtpSms(phone, otp);
 

@@ -1,13 +1,16 @@
+// app/admin/inventory/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Grid, Text } from '@nextui-org/react';
 import ProductCard, { Product } from '@/components/ProductCard';
+import CustomLoader from '@/components/CustomLoader';
+import EditProductModal from '@/components/EditProductModal';
 
 export default function AdminInventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -26,8 +29,7 @@ export default function AdminInventoryPage() {
   }, []);
 
   const handleEdit = (product: Product) => {
-    console.log('Edit product:', product);
-    // Implement navigation to an edit page or open a modal for editing
+    setEditingProduct(product);
   };
 
   const handleDelete = async (id: number) => {
@@ -45,24 +47,37 @@ export default function AdminInventoryPage() {
     }
   };
 
-  if (loading) return <div className="text-white text-center py-8">Loading inventory...</div>;
+  if (loading) return <CustomLoader />;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
 
   return (
-    <div>
-      <Text h2 className="mb-4">Inventory</Text>
-      <Grid.Container gap={2}>
+    <div className="p-4 bg-gradient-to-r from-indigo-900 to-purple-900 min-h-screen text-white">
+      <h2 className="text-3xl font-bold mb-4">Inventory</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {products.map((product) => (
-          <Grid key={product.id} xs={12} sm={6} md={4}>
+          <div key={product.id}>
             <ProductCard
               product={product}
               isAdmin={true}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
-          </Grid>
+          </div>
         ))}
-      </Grid.Container>
+      </div>
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onUpdate={(updatedProduct: Product) => {
+            if (updatedProduct && updatedProduct.id) {
+              setProducts(products.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)));
+            } else {
+              console.error("Updated product is null or missing id", updatedProduct);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

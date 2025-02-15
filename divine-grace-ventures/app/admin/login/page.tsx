@@ -1,3 +1,4 @@
+// app/(admin)/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,7 @@ import { FaUserShield } from 'react-icons/fa';
 import CustomLoader from '@/components/CustomLoader';
 import CustomAlert from '@/components/CustomAlert';
 
-function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'forgot') => void, setLoading: (value: boolean) => void }) {
+function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'forgot') => void; setLoading: (value: boolean) => void; }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
@@ -31,7 +32,7 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
       setAlert({ type: 'success', message: 'Admin login successful! Redirecting...' });
       setTimeout(() => {
         setLoading(false);
-        router.push('/admin');
+        router.push('/admin'); // Redirect to admin dashboard
       }, 2000);
     } catch (error: any) {
       setAlert({ type: 'error', message: error.message || 'Login error' });
@@ -41,11 +42,11 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
+      <h2 className="text-2xl text-white font-bold mb-4 text-center">Admin Login</h2>
       {alert && <CustomAlert type={alert.type} message={alert.message} />}
       <form onSubmit={handleAdminLogin} className="space-y-4">
         <div>
-          <label htmlFor="admin-email" className="block mb-1">Email</label>
+          <label htmlFor="admin-email" className="block text-white mb-1">Email</label>
           <input
             id="admin-email"
             type="email"
@@ -56,7 +57,7 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
           />
         </div>
         <div>
-          <label htmlFor="admin-password" className="block mb-1">Password</label>
+          <label htmlFor="admin-password" className="block text-white mb-1">Password</label>
           <input
             id="admin-password"
             type="password"
@@ -81,7 +82,7 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
   );
 }
 
-function AdminForgotPasswordForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'login') => void, setLoading: (value: boolean) => void }) {
+function AdminForgotPasswordForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'login') => void; setLoading: (value: boolean) => void; }) {
   const [email, setEmail] = useState('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
 
@@ -152,7 +153,7 @@ export default function AdminLoginPage() {
   return (
     <>
       {loading && <CustomLoader />}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
         <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative">
           <div className="absolute top-2 right-2">
             <button className="text-white text-xl" onClick={handleClose}>

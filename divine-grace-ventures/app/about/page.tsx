@@ -1,11 +1,13 @@
 // app/about/page.tsx
+import Header from '@/components/Header';
 import { FaWhatsapp } from 'react-icons/fa';
 
 export default function AboutPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <div className="bg-gradient-to-r from-gray-500 to-blue-900 max-w-3xl mx-auto p-0 px-2 py-2">
+    <Header />
       {/* Background container for added design */}
-      <div className="bg-gray-800 text-white p-8 rounded-lg shadow-xl">
+      <div className="bg-opacity-80 text-white p-8 rounded-lg shadow-xl">
         <h2 className="text-3xl font-bold mb-4 text-center">About Divine Grace Ventures</h2>
         <p className="mb-6 text-lg text-center">
           Divine Grace Ventures is committed to providing an excellent user experience while handling orders, payments, and notifications.

@@ -1,9 +1,10 @@
+// app/dashboard/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { FaSearch, FaSort } from 'react-icons/fa';
-import { Grid, Text } from '@nextui-org/react';
 import ProductCard, { Product } from '@/components/ProductCard';
+import CustomLoader from '@/components/CustomLoader';
 
 export default function DashboardHomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,7 +29,7 @@ export default function DashboardHomePage() {
     fetchProducts();
   }, []);
 
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -39,17 +40,22 @@ export default function DashboardHomePage() {
   });
 
   const handleAddToCart = (id: number) => {
-    // Add your "add to cart" logic here
     console.log('Add to cart product ID:', id);
   };
 
-  if (loading) return <div className="text-white text-center py-8">Loading products...</div>;
-  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
+  if (loading)
+    return <CustomLoader />;
+  if (error)
+    return <div className="text-red-500 text-center py-8">{error}</div>;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="relative">
+    <div className="p-4">
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-bold text-white">Dashboard</h1>
+        <p className="text-lg text-white mt-2">Manage your products, orders, and more.</p>
+      </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div className="relative mb-4 md:mb-0">
           <FaSearch className="absolute left-3 top-2.5 text-gray-400" />
           <input
             type="text"
@@ -60,7 +66,7 @@ export default function DashboardHomePage() {
           />
         </div>
         <div className="flex items-center space-x-2">
-          <FaSort />
+          <FaSort className="text-white" />
           <select
             className="bg-gray-700 text-white rounded p-2"
             value={sort}
@@ -72,19 +78,18 @@ export default function DashboardHomePage() {
           </select>
         </div>
       </div>
-
-      <Grid.Container gap={2}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {sortedProducts.map((product) => (
-          <Grid key={product.id} xs={12} sm={6} md={4}>
+          <div key={product.id}>
             <ProductCard
               product={product}
               isAdmin={false}
               inCart={false}
               onAddToCart={handleAddToCart}
             />
-          </Grid>
+          </div>
         ))}
-      </Grid.Container>
+      </div>
     </div>
   );
 }

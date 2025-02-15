@@ -2,7 +2,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert as NextAlert } from '@nextui-org/react';
 import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimesCircle } from 'react-icons/fa';
 
 type AlertProps = {
@@ -35,24 +34,22 @@ export default function CustomAlert({ type, message }: AlertProps) {
       icon = <FaInfoCircle className="mr-2" />;
   }
 
+  // Determine background color based on alert type
+  const bgColor =
+    type === 'success'
+      ? 'bg-green-500'
+      : type === 'error'
+      ? 'bg-red-500'
+      : type === 'warning'
+      ? 'bg-yellow-500'
+      : 'bg-blue-500';
+
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <NextAlert
-        color={type}
-        variant="shadow"
-        css={{
-          padding: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          background: type === 'success' ? '#28a745' :
-                      type === 'error' ? '#dc3545' :
-                      type === 'warning' ? '#ffc107' : '#17a2b8',
-          color: 'white'
-        }}
-      >
+    <div className={`fixed top-4 right-4 z-[100] px-4 py-3 ${bgColor} rounded-lg text-white shadow-lg animate-fade-in-out`}>
+      <div className="flex items-center">
         {icon}
         <span>{message}</span>
-      </NextAlert>
+      </div>
     </div>
   );
 }
