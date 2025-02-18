@@ -1,22 +1,53 @@
 // context/AuthContext.tsx
 'use client';
 
-import { createContext, useState, useContext, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+
+export interface User {
+  id: string;
+  email: string;
+  userType: 'admin' | 'user';
+  // Additional fields as needed
+}
 
 interface AuthContextType {
-  userType: 'admin' | 'user' | null;
-  setUserType: (userType: 'admin' | 'user' | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  userType: null,
-  setUserType: () => {},
+  user: null,
+  setUser: () => {},
+  loading: true,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [userType, setUserType] = useState<'admin' | 'user' | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/auth/session', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Error loading user:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadUser();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ userType, setUserType }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

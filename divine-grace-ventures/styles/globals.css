@@ -2,12 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/*:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
-@media (prefers-color-scheme: dark) {
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
+
+/*@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;

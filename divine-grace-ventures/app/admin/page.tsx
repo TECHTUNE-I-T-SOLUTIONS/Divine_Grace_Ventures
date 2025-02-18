@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Button, Input, Card } from '@nextui-org/react';
-import { FaPlus, FaTag, FaDollarSign, FaImage, FaListUl } from 'react-icons/fa';
+import { FaPlus, FaTag, FaDollarSign, FaListUl } from 'react-icons/fa';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
 
@@ -12,19 +12,19 @@ export default function AdminHomePage() {
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
   const [newProductAvailable, setNewProductAvailable] = useState(true);
-  const [newProductImage, setNewProductImage] = useState(''); // will store public URL
+  const [newProductImage, setNewProductImage] = useState(''); // will store the file path
   const [newProductQuantity, setNewProductQuantity] = useState('');
+  const [newProductUnit, setNewProductUnit] = useState('');
+  const [newProductUnitPrice, setNewProductUnitPrice] = useState('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Handle file upload via the API endpoint that uses Supabase Storage
+  // Handle file upload via API endpoint (using Supabase Storage)
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-    // Optionally, if updating an existing product, you can append a productId:
-    // formData.append('productId', productId);
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -34,7 +34,8 @@ export default function AdminHomePage() {
       if (!res.ok) {
         setAlert({ type: 'error', message: data.error || 'Failed to upload image' });
       } else {
-        setNewProductImage(data.publicURL);
+        // The API returns a filePath like "products/123456789.jpg"
+        setNewProductImage(data.filePath);
         setAlert({ type: 'success', message: 'Image uploaded successfully!' });
       }
     } catch (error: any) {
@@ -56,6 +57,8 @@ export default function AdminHomePage() {
           available: newProductAvailable,
           image: newProductImage,
           quantity: parseInt(newProductQuantity, 10),
+          unit: newProductUnit,
+          unit_price: parseFloat(newProductUnitPrice)
         }),
       });
       const data = await res.json();
@@ -65,11 +68,13 @@ export default function AdminHomePage() {
         return;
       }
       setAlert({ type: 'success', message: 'Product added successfully!' });
-      // Clear form fields after successful submission
+      // Clear form fields
       setNewProductName('');
       setNewProductPrice('');
       setNewProductImage('');
       setNewProductQuantity('');
+      setNewProductUnit('');
+      setNewProductUnitPrice('');
       setLoading(false);
     } catch (error: any) {
       setAlert({ type: 'error', message: error.message || 'Error adding product' });
@@ -91,17 +96,15 @@ export default function AdminHomePage() {
             {/* Add New Product Section */}
             <div>
               <Card className="bg-gray-800 rounded-xl shadow-lg" css={{ p: '2rem' }}>
-                <h3 className="text-xl font-bold mb-4">Add New Product</h3>
-                {/* Product Name */}
+                <h3 className="text-xl mt-2 text-center font-bold mb-4">Add New Product</h3>
                 <Input
                   placeholder="Product Name"
                   value={newProductName}
                   onChange={(e) => setNewProductName(e.target.value)}
                   fullWidth
                   contentLeft={<FaTag className="text-gray-400" />}
-                  className="mb-4 bg-gray-700 rounded-lg"
+                  className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
-                {/* Product Price */}
                 <Input
                   placeholder="Product Price"
                   type="number"
@@ -109,10 +112,9 @@ export default function AdminHomePage() {
                   onChange={(e) => setNewProductPrice(e.target.value)}
                   fullWidth
                   contentLeft={<FaDollarSign className="text-gray-400" />}
-                  className="mb-4 bg-gray-700 rounded-lg"
+                  className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
-                {/* Product Image Upload */}
-                <div className="mb-4">
+                <div className="p-2 mb-4">
                   <label className="block mb-1 text-white">Product Image</label>
                   <input
                     type="file"
@@ -125,10 +127,14 @@ export default function AdminHomePage() {
                   />
                   {uploading && <p className="text-sm text-gray-300 mt-1">Uploading image...</p>}
                   {newProductImage && (
-                    <img src={newProductImage} alt="Product" className="mt-2 rounded-md max-h-32" />
+                    // Use the proxy to display the image from the stored file path
+                    <img 
+                      src={`/api/proxy-image?filePath=${encodeURIComponent(newProductImage)}`} 
+                      alt="Product" 
+                      className="p-2 mt-2 rounded-lg max-h-32" 
+                    />
                   )}
                 </div>
-                {/* Available Quantity */}
                 <Input
                   placeholder="Available Quantity"
                   type="number"
@@ -136,10 +142,24 @@ export default function AdminHomePage() {
                   onChange={(e) => setNewProductQuantity(e.target.value)}
                   fullWidth
                   contentLeft={<FaListUl className="text-gray-400" />}
-                  className="mb-4 bg-gray-700 rounded-lg"
+                  className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
-                {/* Availability Dropdown */}
-                <div className="mb-4">
+                <Input
+                  placeholder="Unit (e.g., bag, cup)"
+                  value={newProductUnit}
+                  onChange={(e) => setNewProductUnit(e.target.value)}
+                  fullWidth
+                  className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
+                />
+                <Input
+                  placeholder="Unit Price"
+                  type="number"
+                  value={newProductUnitPrice}
+                  onChange={(e) => setNewProductUnitPrice(e.target.value)}
+                  fullWidth
+                  className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
+                />
+                <div className="p-2 mb-4">
                   <select
                     value={newProductAvailable ? 'yes' : 'no'}
                     onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
@@ -153,7 +173,7 @@ export default function AdminHomePage() {
                   auto
                   icon={<FaPlus className="mr-1" />}
                   onClick={handleAddProduct}
-                  className="w-full bg-blue-500 hover:bg-blue-600 rounded-full"
+                  className="m-2 font-bold bg-blue-700 hover:bg-blue-900 rounded-full"
                 >
                   Add Product
                 </Button>
@@ -161,10 +181,10 @@ export default function AdminHomePage() {
             </div>
             {/* Recent Orders Section */}
             <div>
-              <Card className="bg-gray-800 rounded-xl shadow-lg" css={{ p: '2rem' }}>
-                <h3 className="text-xl font-bold mb-4">Recent Orders</h3>
+              <Card className="p-2 bg-gray-800 rounded-xl shadow-lg" css={{ p: '2rem' }}>
+                <h3 className="text-xl text-center font-bold mb-4">Recent Orders</h3>
                 <p className="break-words">
-                  This section will display recent orders. (You can expand this area with a table or list as needed.)
+                  This section should display recent orders. (Or you can view it by checking the navigation bar.)
                 </p>
               </Card>
             </div>

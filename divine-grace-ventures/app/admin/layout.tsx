@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Admin Header */}
       <header className="flex items-center justify-between bg-gray-900 p-4 shadow">
         <div className="flex items-center space-x-3">
-          <img src="/images/logo.png" alt="Logo" className="h-10 w-10 rounded-full" />
+          <img src="/images/logo.png" alt="Logo" className="h-10 w-10 rounded-lg" />
           <span className="text-2xl text-white font-bold">Admin Panel</span>
         </div>
         <button 

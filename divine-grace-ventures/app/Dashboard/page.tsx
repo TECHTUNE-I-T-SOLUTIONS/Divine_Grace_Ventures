@@ -5,13 +5,17 @@ import { useState, useEffect } from 'react';
 import { FaSearch, FaSort } from 'react-icons/fa';
 import ProductCard, { Product } from '@/components/ProductCard';
 import CustomLoader from '@/components/CustomLoader';
+import { useAuth } from '@/context/AuthContext';
+import AddToCartModal from '@/components/AddToCartModal';
 
 export default function DashboardHomePage() {
+  const { user, loading: authLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -35,24 +39,52 @@ export default function DashboardHomePage() {
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sort === 'price') return a.price - b.price;
-    if (sort === 'availability') return a.available === b.available ? 0 : a.available ? -1 : 1;
+    if (sort === 'availability')
+      return a.available === b.available ? 0 : a.available ? -1 : 1;
     return a.name.localeCompare(b.name);
   });
 
-  const handleAddToCart = (id: number) => {
-    console.log('Add to cart product ID:', id);
+  // When a product's Add to Cart is pressed, store the whole product in state to open the modal.
+  const openAddToCartModal = (product: Product) => {
+    setSelectedProduct(product);
   };
 
-  if (loading)
-    return <CustomLoader />;
-  if (error)
-    return <div className="text-red-500 text-center py-8">{error}</div>;
+  const handleAddToCart = async (productId: number, userQuantity: number, note: string) => {
+    try {
+      if (!user) throw new Error("User not authenticated");
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          product_id: productId,
+          user_quantity: userQuantity,
+          note,
+          // Optionally, you can include product details copied from the product:
+          price: sortedProducts.find((p) => p.id === productId)?.price,
+          unit: sortedProducts.find((p) => p.id === productId)?.unit || 'unit',
+          image: sortedProducts.find((p) => p.id === productId)?.image,
+          unit_price: sortedProducts.find((p) => p.id === productId)?.unit_price,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to add to cart');
+      console.log('Added to cart:', data);
+      setSelectedProduct(null);
+    } catch (error: any) {
+      console.error('Add to cart error:', error.message);
+    }
+  };
+
+  if (authLoading || loading) return <CustomLoader />;
+  if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
+  if (!user) return <div>Please log in to view the dashboard.</div>;
 
   return (
     <div className="p-4">
       <div className="text-center mb-6">
         <h1 className="text-4xl font-bold text-white">Dashboard</h1>
-        <p className="text-lg text-white mt-2">Manage your products, orders, and more.</p>
+        <p className="text-lg text-white mt-2">Browse our products, make orders, and more.</p>
       </div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div className="relative mb-4 md:mb-0">
@@ -85,11 +117,26 @@ export default function DashboardHomePage() {
               product={product}
               isAdmin={false}
               inCart={false}
-              onAddToCart={handleAddToCart}
+              onAddToCart={openAddToCartModal}
             />
           </div>
         ))}
       </div>
+      {selectedProduct && (
+        <AddToCartModal
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          productImage={
+            selectedProduct.image && !selectedProduct.image.startsWith('http')
+              ? `/api/proxy-image?filePath=${encodeURIComponent(selectedProduct.image)}`
+              : selectedProduct.image || ''
+          }
+          productPrice={selectedProduct.price}
+          unit={selectedProduct.unit || 'unit'}
+          onAdd={(quantity, note) => handleAddToCart(selectedProduct.id, quantity, note)}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </div>
   );
 }

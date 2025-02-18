@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.4",
     "@nextui-org/react": "^2.6.11",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.48.1",
     "africastalking": "^0.7.2",
     "bcryptjs": "^2.4.3",
@@ -24,6 +25,7 @@
     "react-dom": "^19.0.0",
     "react-google-recaptcha": "^3.1.0",
     "react-icons": "^5.4.0",
+    "react-paystack": "^6.0.0",
     "supabase": "^2.12.1",
     "twilio": "^5.4.4"
   },

@@ -2,6 +2,20 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
+export async function GET(request: Request) {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*');
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ products: data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { name, price, available, image, quantity } = await request.json();
@@ -32,7 +46,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
-
 
 export async function DELETE(request: Request) {
   try {

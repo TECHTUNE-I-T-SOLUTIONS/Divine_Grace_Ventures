@@ -196,20 +196,23 @@ export default function AuthPage() {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+        title="Login">
           Login
         </button>
       </form>
       <div className="mt-4 text-center">
         <p className="text-white">
           Don't have an account?{' '}
-          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline">
+          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline"
+          title="Sign Up">
             Sign Up
           </button>
         </p>
         <p className="mt-2 text-white">
           Forgot Password?{' '}
-          <button onClick={() => { setActiveView('forgot'); setAlert(null); }} className="text-blue-400 hover:underline">
+          <button onClick={() => { setActiveView('forgot'); setAlert(null); }} className="text-blue-400 hover:underline"
+          title="Reset Password">
             Reset Here
           </button>
         </p>
@@ -277,6 +280,7 @@ export default function AuthPage() {
         {!otpSent && (
           <button
             type="button"
+            title="Send OTP"
             onClick={sendOtp}
             className="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600"
           >
@@ -286,6 +290,7 @@ export default function AuthPage() {
         {otpSent && (
           <button
             type="button"
+            title="Confirm OTP"
             onClick={() => setActiveView('otp')}
             className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
           >
@@ -296,7 +301,8 @@ export default function AuthPage() {
       <div className="mt-4 text-center">
         <p className="text-white">
           Already have an account?{' '}
-          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline">
+          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline"
+          title="Login">
             Login
           </button>
         </p>
@@ -321,13 +327,15 @@ export default function AuthPage() {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
+        <button type="submit" className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+        title="Confirm OTP">
           Confirm OTP
         </button>
       </form>
       {/* Resend OTP button */}
       <button 
         type="button"
+        title="Resend OTP"
         onClick={sendOtp}
         className="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 mt-4"
       >
@@ -353,14 +361,16 @@ export default function AuthPage() {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600">
+        <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600"
+        title="Reset Password">
           Reset Password
         </button>
       </form>
       <div className="mt-4 text-center">
         <p className="text-white">
           Remembered your password?{' '}
-          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline">
+          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline"
+          title="Login">
             Login
           </button>
         </p>

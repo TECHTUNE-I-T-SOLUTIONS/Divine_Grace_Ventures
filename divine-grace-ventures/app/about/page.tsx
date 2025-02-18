@@ -4,7 +4,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 export default function AboutPage() {
   return (
-    <div className="bg-gradient-to-r from-gray-500 to-blue-900 max-w-3xl mx-auto p-0 px-2 py-2">
+    <div className="w-full bg-gradient-to-r from-gray-500 to-blue-900 mx-auto p-0 px-2 py-2">
     <Header />
       {/* Background container for added design */}
       <div className="bg-opacity-80 text-white p-8 rounded-lg shadow-xl">
@@ -38,7 +38,9 @@ export default function AboutPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded transition duration-300"
           >
-            <FaWhatsapp className="mr-2" size={20} />
+            <FaWhatsapp className="mr-2"
+            size={20}
+            title="Chat on Whatsapp" />
             Chat on WhatsApp
           </a>
         </div>

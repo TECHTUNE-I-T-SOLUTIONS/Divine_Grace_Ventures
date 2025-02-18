@@ -9,7 +9,7 @@ export interface Product {
   name: string;
   price: number;
   available: boolean;
-  image?: string; // This should be a public URL
+  image?: string; // This stores the file path (e.g., "products/1739640706207.jpg") or a full URL
   quantity?: number;
 }
 
@@ -32,20 +32,28 @@ export default function ProductCard({
   onEdit,
   onDelete,
 }: ProductCardProps) {
+  // If product.image doesn't start with "http", assume it's a file path stored in the DB.
+  // Use the proxy endpoint to generate a signed URL.
+  const imageSrc =
+    product.image && !product.image.startsWith('http')
+      ? `/api/proxy-image?filePath=${encodeURIComponent(product.image)}`
+      : product.image || '';
+
   return (
     <div className="max-w-md border border-gray-300 rounded-lg overflow-hidden shadow-md">
       <div className="px-4 py-2 bg-gray-100">
-        <h3 className="text-lg text-black font-bold">{product.name}</h3>
+        <h3 className="text-lg text-center text-black font-bold">{product.name}</h3>
       </div>
       <div>
-        {product.image ? (
+        {imageSrc ? (
           <div className="relative w-full h-36">
             <Image
-              src={product.image}
+              src={imageSrc}
               alt={product.name}
               fill
               sizes="100vw"
               className="object-cover"
+              unoptimized
             />
           </div>
         ) : (
@@ -57,7 +65,7 @@ export default function ProductCard({
         )}
       </div>
       <div className="px-4 py-2">
-        <p className="text-gray-800">Price: ${product.price}</p>
+        <p className="text-white">Price: ₦{product.price}</p>
         <p className={product.available ? "text-green-500" : "text-red-500"}>
           {product.available ? "Available" : "Out of Stock"}
         </p>
@@ -81,16 +89,13 @@ export default function ProductCard({
         ) : (
           <div className="mt-4">
             {inCart ? (
-              <button
-                disabled
-                className="border border-green-500 text-green-500 px-3 py-1 rounded"
-              >
+              <button disabled className="border border-green-500 text-green-500 px-3 py-1 rounded">
                 <FaCheck className="inline mr-1" />
                 In Cart
               </button>
             ) : (
               <button
-                className="border border-blue-500 text-blue-500 px-3 py-1 rounded hover:bg-blue-500 hover:text-white transition-colors"
+                className="border border-blue-400 text-blue-300 px-3 py-1 rounded hover:bg-white hover:text-black transition-colors"
                 onClick={() => onAddToCart && onAddToCart(product.id)}
               >
                 <FaCartPlus className="inline mr-1" />
