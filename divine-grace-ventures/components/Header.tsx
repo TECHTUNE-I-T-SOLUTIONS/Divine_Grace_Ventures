@@ -1,25 +1,14 @@
-// components/Header.tsx
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FaHome, FaInfoCircle, FaUserShield, FaUser, FaBars, FaSignOutAlt } from 'react-icons/fa';
-import { useAuth } from '@/context/AuthContext';
+import { FaHome, FaInfoCircle, FaUserShield, FaUser, FaBars } from 'react-icons/fa';
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { userType, setUserType } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    // Clear any auth tokens if needed, then update context
-    setUserType(null);
-    router.push('/login');
-  };
 
   return (
-    <header className="bg-tranparent bg-opacity-90 shadow-md p-4">
+    <header className="bg-transparent bg-opacity-90 shadow-md p-4">
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo and Brand */}
         <div className="flex items-center space-x-2">
@@ -45,60 +34,22 @@ export default function Header() {
                 </div>
               </Link>
             </li>
-            {userType === 'admin' ? (
-              <>
-                <li>
-                  <Link href="/admin">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUserShield />
-                      <span>Dashboard</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout} className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                    <FaSignOutAlt />
-                    <span>Logout</span>
-                  </button>
-                </li>
-              </>
-            ) : userType === 'user' ? (
-              <>
-                <li>
-                  <Link href="/user">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUser />
-                      <span>Profile</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout} className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                    <FaSignOutAlt />
-                    <span>Logout</span>
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link href="/admin/login">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUserShield />
-                      <span>Admin</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/user">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUser />
-                      <span>Login / Sign Up</span>
-                    </div>
-                  </Link>
-                </li>
-              </>
-            )}
+            <li>
+              <Link href="/adminLogin">
+                <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
+                  <FaUserShield />
+                  <span>Admin</span>
+                </div>
+              </Link>
+            </li>
+            <li>
+              <Link href="/user">
+                <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
+                  <FaUser />
+                  <span>Login / Sign Up</span>
+                </div>
+              </Link>
+            </li>
           </ul>
         </nav>
         {/* Mobile Menu Button */}
@@ -128,60 +79,22 @@ export default function Header() {
                 </div>
               </Link>
             </li>
-            {userType === 'admin' ? (
-              <>
-                <li>
-                  <Link href="/admin">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUserShield />
-                      <span>Dashboard</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout} className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                    <FaSignOutAlt />
-                    <span>Logout</span>
-                  </button>
-                </li>
-              </>
-            ) : userType === 'user' ? (
-              <>
-                <li>
-                  <Link href="/user">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUser />
-                      <span>Profile</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={handleLogout} className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                    <FaSignOutAlt />
-                    <span>Logout</span>
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link href="/admin/login">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUserShield />
-                      <span>Admin</span>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/user">
-                    <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
-                      <FaUser />
-                      <span>Login / Sign Up</span>
-                    </div>
-                  </Link>
-                </li>
-              </>
-            )}
+            <li>
+              <Link href="/adminLogin">
+                <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
+                  <FaUserShield />
+                  <span>Admin</span>
+                </div>
+              </Link>
+            </li>
+            <li>
+              <Link href="/user">
+                <div className="flex items-center space-x-1 text-white font-bold hover:text-blue-500">
+                  <FaUser />
+                  <span>Login / Sign Up</span>
+                </div>
+              </Link>
+            </li>
           </ul>
         </nav>
       )}

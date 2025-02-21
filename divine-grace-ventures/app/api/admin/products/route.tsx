@@ -18,10 +18,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { name, price, available, image, quantity } = await request.json();
+    // Destructure the additional fields: unit and unit_price
+    const { name, price, available, image, quantity, unit, unit_price } = await request.json();
     const { data, error } = await supabase
       .from('products')
-      .insert([{ name, price, available, image, quantity }])
+      .insert([{ name, price, available, image, quantity, unit, unit_price }])
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ message: 'Product added successfully', data });
@@ -32,12 +33,13 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { id, name, price, available, quantity, image } = await request.json();
+    // Also include unit and unit_price in the update
+    const { id, name, price, available, quantity, image, unit, unit_price } = await request.json();
     const { data, error } = await supabase
       .from('products')
-      .update({ name, price, available, quantity, image })
+      .update({ name, price, available, quantity, image, unit, unit_price })
       .eq('id', id)
-      .select()  // force the updated row to be returned
+      .select() // force the updated row to be returned
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (!data) return NextResponse.json({ error: 'No product returned after update' }, { status: 500 });

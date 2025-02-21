@@ -44,27 +44,27 @@ export default function DashboardHomePage() {
     return a.name.localeCompare(b.name);
   });
 
-  // When a product's Add to Cart is pressed, store the whole product in state to open the modal.
+  // When a product's "Add to Cart" is clicked, open the modal with the full product details.
   const openAddToCartModal = (product: Product) => {
     setSelectedProduct(product);
   };
 
-  const handleAddToCart = async (productId: number, userQuantity: number, note: string) => {
+  // When the modal form is submitted, add the item to the cart.
+  const handleAddToCart = async (userQuantity: number, note: string) => {
     try {
-      if (!user) throw new Error("User not authenticated");
+      if (!user || !selectedProduct) throw new Error("User not authenticated or product not selected");
       const res = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: user.id,
-          product_id: productId,
+          product_id: selectedProduct.id,
           user_quantity: userQuantity,
           note,
-          // Optionally, you can include product details copied from the product:
-          price: sortedProducts.find((p) => p.id === productId)?.price,
-          unit: sortedProducts.find((p) => p.id === productId)?.unit || 'unit',
-          image: sortedProducts.find((p) => p.id === productId)?.image,
-          unit_price: sortedProducts.find((p) => p.id === productId)?.unit_price,
+          price: selectedProduct.price,
+          unit: selectedProduct.unit || 'unit',
+          image: selectedProduct.image,
+          unit_price: selectedProduct.unit_price,
         }),
       });
       const data = await res.json();
@@ -78,7 +78,7 @@ export default function DashboardHomePage() {
 
   if (authLoading || loading) return <CustomLoader />;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
-  if (!user) return <div>Please log in to view the dashboard.</div>;
+  if (!user) return <div>Please log in to view the dashboard or refresh this page.</div>;
 
   return (
     <div className="p-4">
@@ -117,23 +117,15 @@ export default function DashboardHomePage() {
               product={product}
               isAdmin={false}
               inCart={false}
-              onAddToCart={openAddToCartModal}
+              onAddToCart={openAddToCartModal} // Pass full product
             />
           </div>
         ))}
       </div>
       {selectedProduct && (
         <AddToCartModal
-          productId={selectedProduct.id}
-          productName={selectedProduct.name}
-          productImage={
-            selectedProduct.image && !selectedProduct.image.startsWith('http')
-              ? `/api/proxy-image?filePath=${encodeURIComponent(selectedProduct.image)}`
-              : selectedProduct.image || ''
-          }
-          productPrice={selectedProduct.price}
-          unit={selectedProduct.unit || 'unit'}
-          onAdd={(quantity, note) => handleAddToCart(selectedProduct.id, quantity, note)}
+          product={selectedProduct}
+          onAdd={handleAddToCart}
           onClose={() => setSelectedProduct(null)}
         />
       )}

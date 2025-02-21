@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   if (!user_id) {
     return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
   }
-  // Join cart_items with products so that you get the product details
+  // Join cart_items with products so that you get the product details (including unit, unit_price, etc.)
   const { data, error } = await supabase
     .from('cart_items')
     .select(`
@@ -21,7 +21,9 @@ export async function GET(request: Request) {
       unit,
       image,
       unit_price,
-      products:products ( name, image, price, available, unit, unit_price )
+      products:products (
+        name, image, price, available, unit, unit_price
+      )
     `)
     .eq('user_id', user_id);
 
@@ -33,16 +35,49 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { user_id, product_id, user_quantity, note, price, unit, image, unit_price } = await request.json();
-    if (!user_id || !product_id || !user_quantity) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // Extract fields from the request body.
+    const {
+      user_id,
+      product_id,
+      user_quantity,
+      note,
+      price,
+      unit,
+      image,
+      unit_price,
+    } = await request.json();
+
+    // Check that required fields are provided
+    if (!user_id || !product_id || user_quantity == null) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
+
+    // Insert a new cart item.
     const { data, error } = await supabase
       .from('cart_items')
-      .insert([{ user_id, product_id, user_quantity, note, price, unit, image, unit_price }])
+      .insert([
+        {
+          user_id,
+          product_id,
+          user_quantity,
+          note: note || '',
+          price: price || null,
+          unit: unit || '',
+          image: image || '',
+          unit_price: unit_price || null,
+        },
+      ])
       .single();
+
     if (error) throw error;
-    return NextResponse.json({ message: 'Item added to cart', cartItem: data });
+
+    return NextResponse.json({
+      message: 'Item added to cart',
+      cartItem: data,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

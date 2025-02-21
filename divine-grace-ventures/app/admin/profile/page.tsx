@@ -1,18 +1,17 @@
-// app/dashboard/profile/page.tsx
+// app/admin/profile/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CustomLoader from '@/components/CustomLoader';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-import { FaUser, FaEnvelope, FaPhone, FaHome, FaLock, FaSave } from 'react-icons/fa';
 
-export default function ProfilePage() {
+export default function AdminProfilePage() {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [address, setAddress] = useState(user?.address || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [alertMessage, setAlertMessage] = useState<string>('');
@@ -25,12 +24,10 @@ export default function ProfilePage() {
       setLoading(false);
       return;
     }
-
-    const payload: any = { full_name: fullName, phone, address };
+    const payload: any = { full_name: fullName, phone };
     if (password) payload.password = password;
-
     try {
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/api/admin/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'user-id': user?.id || '' },
         body: JSON.stringify(payload),
@@ -40,8 +37,8 @@ export default function ProfilePage() {
         setAlertMessage(data.error || 'Failed to update profile');
       } else {
         setAlertMessage('Profile updated successfully');
-        // Update auth context with new details.
-        setUser({ ...user, full_name: fullName, phone, address });
+        // Update the AuthContext with new details
+        setUser({ ...user, full_name: fullName, phone });
       }
     } catch (err: any) {
       setAlertMessage(err.message);
@@ -52,9 +49,9 @@ export default function ProfilePage() {
   if (!user) return <CustomLoader />;
 
   return (
-    <div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-indigo-800 to-purple-800 rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 flex justify-center">
-        <FaUser className="mr-2" /> My Profile
+    <div className="max-w-2xl mx-auto p-4 bg-white rounded shadow">
+      <h2 className="text-2xl font-bold mb-4 flex items-center">
+        <FaUser className="mr-2" /> Admin Profile
       </h2>
       {alertMessage && <div className="mb-4 text-red-500">{alertMessage}</div>}
       <form onSubmit={handleSave}>
@@ -66,19 +63,19 @@ export default function ProfilePage() {
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="text-black w-full border rounded p-2"
+            className="w-full border rounded p-2"
             placeholder="Enter your full name"
           />
         </div>
         <div className="mb-4">
           <label className="block mb-1 font-semibold">
-            <FaEnvelope className="inline mr-1" /> Email (not editable)
+            <FaEnvelope className="inline mr-1" /> Email
           </label>
           <input
             type="email"
             value={email}
             disabled
-            className="text-black w-full border rounded p-2 bg-gray-200"
+            className="w-full border rounded p-2 bg-gray-200"
           />
         </div>
         <div className="mb-4">
@@ -89,20 +86,8 @@ export default function ProfilePage() {
             type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="text-black w-full border rounded p-2"
+            className="w-full border rounded p-2"
             placeholder="Enter your phone number"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1 font-semibold">
-            <FaHome className="inline mr-1" /> Address
-          </label>
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="text-black w-full border rounded p-2"
-            placeholder="Enter your address"
           />
         </div>
         <div className="mb-4">
@@ -113,7 +98,7 @@ export default function ProfilePage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="text-black w-full border rounded p-2"
+            className="w-full border rounded p-2"
             placeholder="Enter new password"
           />
         </div>
@@ -125,7 +110,7 @@ export default function ProfilePage() {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="text-black w-full border rounded p-2"
+            className="w-full border rounded p-2"
             placeholder="Confirm new password"
           />
         </div>

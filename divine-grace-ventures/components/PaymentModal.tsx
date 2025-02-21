@@ -3,37 +3,63 @@
 
 import { useState } from 'react';
 import { usePaystackPayment } from 'react-paystack';
+import useSound from 'use-sound';
+import CustomAlert from '@/components/CustomAlert';
 
 interface PaymentModalProps {
   totalAmount: number;
   email: string;
-  onSuccess: (reference: string, deliveryInfo: { address: string, phone: string, note?: string, delivery_date: string }) => void;
+  onSuccess: (
+    reference: string,
+    deliveryInfo: { address: string; phone: string; payer_name: string; note?: string }
+  ) => void;
   onClose: () => void;
 }
 
 export default function PaymentModal({ totalAmount, email, onSuccess, onClose }: PaymentModalProps) {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryPhone, setDeliveryPhone] = useState('');
+  const [payerName, setPayerName] = useState('');
   const [note, setNote] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('');
-  
+  const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const [playSuccess] = useSound('/sounds/success.mp3', { volume: 0.5 });
+
   const config = {
     reference: new Date().getTime().toString(),
     email,
-    amount: totalAmount * 100,
+    amount: totalAmount * 100, // Paystack expects the amount in kobo
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
   };
 
   const initializePayment = usePaystackPayment(config);
 
   const handlePayment = () => {
-    if (!deliveryAddress || !deliveryPhone || !deliveryDate) {
-      alert("Please fill in delivery address, phone, and expected delivery date");
+    if (!deliveryAddress || !deliveryPhone || !payerName) {
+      setAlertMessage({ type: 'error', message: "Please fill in your delivery address, phone number, and your name." });
       return;
     }
     initializePayment({
       onSuccess: (reference) => {
-        onSuccess(reference.reference, { address: deliveryAddress, phone: deliveryPhone, note, delivery_date: deliveryDate });
+        playSuccess();
+        setAlertMessage({ type: 'success', message: "Payment successful!" });
+        // Create a notification after a successful payment
+        fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Payment successful with reference ${reference.reference}.`,
+            email, // you can also pass user_id if available
+            type: "payment_success"
+          })
+        });
+        // Call the parent's onSuccess callback with delivery info.
+        onSuccess(reference.reference, {
+          address: deliveryAddress,
+          phone: deliveryPhone,
+          payer_name: payerName,
+          note,
+        });
       },
       onClose,
     });
@@ -65,27 +91,32 @@ export default function PaymentModal({ totalAmount, email, onSuccess, onClose }:
           />
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Note (optional)</label>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+          <label className="block text-sm font-medium mb-1">Your Name</label>
+          <input
+            type="text"
+            value={payerName}
+            onChange={(e) => setPayerName(e.target.value)}
             className="w-full text-black border rounded p-2"
-            placeholder="Additional instructions"
+            placeholder="Enter your name"
           />
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium mb-1">Expected Delivery Date</label>
-          <input
-            type="date"
-            value={deliveryDate}
-            onChange={(e) => setDeliveryDate(e.target.value)}
+          <label className="block text-sm font-medium mb-1">Note (Optional)</label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Any special instructions?"
             className="w-full text-black border rounded p-2"
           />
         </div>
-        <button onClick={handlePayment} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded">
+        <p className="mt-4 text-center text-sm text-gray-300">
+          Delivery may take at least 5 days. Our admin will contact you for further details.
+        </p>
+        {alertMessage && <CustomAlert type={alertMessage.type} message={alertMessage.message} />}
+        <button onClick={handlePayment} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
           Pay Now
         </button>
-        <button onClick={onClose} className="mt-2 ml-56 bg-green-500 text-red-500 px-4 py-2 rounded">
+        <button onClick={onClose} className="mt-2 ml-56 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
           Cancel
         </button>
       </div>

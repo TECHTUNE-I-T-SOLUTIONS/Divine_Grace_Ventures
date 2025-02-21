@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
+import PaymentCard from '@/components/PaymentCard';
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -33,14 +34,7 @@ export default function AdminPaymentsPage() {
       <h2 className="text-3xl font-bold mb-6">Payments</h2>
       <div className="space-y-4">
         {payments.map((payment) => (
-          <div key={payment.id} className="bg-gray-800 p-4 rounded-xl shadow break-words">
-            <p className="text-lg">Order ID: {payment.order_id}</p>
-            <p className="text-lg">Amount: ${payment.amount}</p>
-            <p className="text-lg">Status: {payment.status}</p>
-            <p className="text-sm text-gray-400">
-              Date: {new Date(payment.date).toLocaleString()}
-            </p>
-          </div>
+          <PaymentCard key={payment.id} transaction={payment} />
         ))}
       </div>
     </div>

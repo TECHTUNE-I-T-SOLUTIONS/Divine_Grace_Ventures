@@ -3,26 +3,15 @@
 
 import { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { Product } from './ProductCard';
 
 interface AddToCartModalProps {
-  productId: number;
-  productName: string;
-  productImage?: string;
-  productPrice: number;
-  unit: string; // e.g., "bag", "cup", etc.
+  product: Product;
   onClose: () => void;
   onAdd: (userQuantity: number, note: string) => void;
 }
 
-export default function AddToCartModal({
-  productId,
-  productName,
-  productImage,
-  productPrice,
-  unit,
-  onClose,
-  onAdd,
-}: AddToCartModalProps) {
+export default function AddToCartModal({ product, onClose, onAdd }: AddToCartModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
 
@@ -31,6 +20,12 @@ export default function AddToCartModal({
     onAdd(quantity, note);
   };
 
+  // Compute imageSrc: if product.image is not a full URL, generate one via the proxy endpoint.
+  const imageSrc =
+    product.image && !product.image.startsWith('http')
+      ? `/api/proxy-image?filePath=${encodeURIComponent(product.image)}`
+      : product.image || '';
+
   return (
     <div className="fixed inset-0 flex items-end justify-center z-50">
       {/* Overlay */}
@@ -38,25 +33,33 @@ export default function AddToCartModal({
       {/* Modal */}
       <div className="bg-gradient-to-b from-indigo-800 to-purple-800 w-full max-w-md rounded-t-lg p-4 animate-slide-up">
         <div className="flex justify-between items-center border-b pb-2">
-          <h3 className="text-lg text-white font-bold">Add {productName} to Cart</h3>
-          <button 
-          onClick={onClose} 
-          title="Close">
-            <FaTimes size={20} />
+          <h3 className="text-lg text-white font-bold">Add {product.name} to Cart</h3>
+          <button onClick={onClose} title="Close">
+            <FaTimes size={20} className="text-white" />
           </button>
         </div>
-        {productImage && (
+        {imageSrc && (
           <div className="my-4 flex justify-center">
-            <img src={productImage} alt={productName} className="h-24 w-24 object-cover rounded" />
+            <img
+              src={imageSrc}
+              alt={product.name}
+              className="h-24 w-24 object-cover rounded"
+            />
           </div>
         )}
         <p className="text-sm text-gray-200">
-          Price: ₦{productPrice} per {unit}
+          Price: ₦{product.price} (Pack, Bag, Sack)
         </p>
+        {product.unit_price && (
+          <p className="text-sm text-gray-300">
+            Unit Price: ₦{product.unit_price}
+            {product.unit ? ` per ${product.unit}` : ''}
+          </p>
+        )}        
         <form onSubmit={handleSubmit} className="mt-4">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-300">
-              Quantity ({unit})
+              Quantity (How many... Packs, Bags, Sacks?)
             </label>
             <input
               type="number"

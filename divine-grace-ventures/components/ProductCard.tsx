@@ -9,8 +9,10 @@ export interface Product {
   name: string;
   price: number;
   available: boolean;
-  image?: string; // This stores the file path (e.g., "products/1739640706207.jpg") or a full URL
+  image?: string; // Either a file path (e.g., "products/1739640706207.jpg") or a full URL
   quantity?: number;
+  unit?: string;       // e.g., "bag", "cup"
+  unit_price?: number; // Price per unit measure
 }
 
 interface ProductCardProps {
@@ -19,7 +21,7 @@ interface ProductCardProps {
   isAdmin?: boolean;
   /** For user view: whether the product is already in the cart */
   inCart?: boolean;
-  onAddToCart?: (productId: number) => void;
+  onAddToCart?: (product: Product) => void;
   onEdit?: (product: Product) => void;
   onDelete?: (productId: number) => void;
 }
@@ -40,8 +42,8 @@ export default function ProductCard({
       : product.image || '';
 
   return (
-    <div className="max-w-md border border-gray-300 rounded-lg overflow-hidden shadow-md">
-      <div className="px-4 py-2 bg-gray-100">
+    <div className="max-w-md border border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+      <div className="px-2 py-2 bg-gray-100">
         <h3 className="text-lg text-center text-black font-bold">{product.name}</h3>
       </div>
       <div>
@@ -65,7 +67,15 @@ export default function ProductCard({
         )}
       </div>
       <div className="px-4 py-2">
-        <p className="text-white">Price: ₦{product.price}</p>
+        <p className="text-white">
+          Price: ₦{product.price}
+        </p>
+        {product.unit_price && (
+          <p className="text-sm text-gray-300">
+            Unit Price: ₦{product.unit_price}
+            {product.unit ? ` per ${product.unit}` : ''}
+          </p>
+        )}
         <p className={product.available ? "text-green-500" : "text-red-500"}>
           {product.available ? "Available" : "Out of Stock"}
         </p>
@@ -73,6 +83,7 @@ export default function ProductCard({
           <div className="flex space-x-2 mt-4">
             <button
               className="border border-blue-500 text-blue-500 px-3 py-1 rounded hover:bg-blue-500 hover:text-white transition-colors"
+              title="Edit"
               onClick={() => onEdit && onEdit(product)}
             >
               <FaEdit className="inline mr-1" />
@@ -80,6 +91,7 @@ export default function ProductCard({
             </button>
             <button
               className="border border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition-colors"
+              title="Delete"
               onClick={() => onDelete && onDelete(product.id)}
             >
               <FaTrash className="inline mr-1" />
@@ -89,14 +101,16 @@ export default function ProductCard({
         ) : (
           <div className="mt-4">
             {inCart ? (
-              <button disabled className="border border-green-500 text-green-500 px-3 py-1 rounded">
+              <button disabled className="border border-green-500 text-green-500 px-3 py-1 rounded"
+              title="In Cart">
                 <FaCheck className="inline mr-1" />
                 In Cart
               </button>
             ) : (
               <button
                 className="border border-blue-400 text-blue-300 px-3 py-1 rounded hover:bg-white hover:text-black transition-colors"
-                onClick={() => onAddToCart && onAddToCart(product.id)}
+                title="Add to Cart"
+                onClick={() => onAddToCart && onAddToCart(product)}
               >
                 <FaCartPlus className="inline mr-1" />
                 Add to Cart

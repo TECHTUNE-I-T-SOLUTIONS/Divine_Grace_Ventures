@@ -1,61 +1,136 @@
-// app/api/orders/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(request: Request) {
   try {
-    const { user_id, cart, delivery_address, delivery_phone, note, delivery_date } = await request.json();
-    if (!user_id || !cart || !delivery_address || !delivery_phone || !delivery_date) {
+    const {
+      user_id,
+      cart, // an array of cart items
+      payment_reference,
+      delivery_address,
+      delivery_phone,
+      payer_name,
+      note
+    } = await request.json();
+
+    if (!user_id || !cart || !payment_reference || !delivery_address || !delivery_phone || !payer_name) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-    // Calculate total amount (assumes each cart item has price and quantity)
-    const total = cart.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-    // Insert new order
-    const { data: order, error } = await supabase
+
+    console.log("User ID for order:", user_id); // Debug: ensure user_id is present and correct
+
+    // Calculate total amount from cart items (using user_quantity if available)
+    const total = cart.reduce((acc: number, item: any) => {
+      const qty = item.user_quantity || item.quantity || 0;
+      return acc + (item.price * qty);
+    }, 0);
+
+    // Insert order and return the inserted row
+    const orderRes = await supabase
       .from('orders')
       .insert([
-        { user_id, order_items: cart, total, delivery_address, delivery_phone, note, delivery_date }
+        {
+          user_id,
+          order_items: cart,
+          total,
+          delivery_address,
+          delivery_phone,
+          payer_name,
+          note,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
       ])
-      .single();
-    if (error) throw error;
-    // Clear the user's cart items
-    const { error: clearError } = await supabase
+      .select();
+
+    if (orderRes.error) throw orderRes.error;
+    if (!orderRes.data || orderRes.data.length === 0) {
+      throw new Error("No order returned after insert");
+    }
+    const orderData = orderRes.data[0];
+
+    // Insert a payment record
+    const paymentRes = await supabase
+      .from('payments')
+      .insert([
+        {
+          order_id: orderData.id,
+          user_id,
+          payment_reference,
+          payer_name,
+          amount: total,
+          delivery_address,
+          delivery_phone,
+          note,
+          payment_date: new Date().toISOString(),
+          status: 'successful',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ])
+      .select();
+
+    if (paymentRes.error) throw paymentRes.error;
+    if (!paymentRes.data || paymentRes.data.length === 0) {
+      throw new Error("No payment returned after insert");
+    }
+    const paymentData = paymentRes.data[0];
+
+    // Clear the user's cart
+    const deleteRes = await supabase
       .from('cart_items')
       .delete()
       .eq('user_id', user_id);
-    if (clearError) console.error('Error clearing cart:', clearError.message);
-    return NextResponse.json({ message: 'Order created successfully', order });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
 
-// API (PUT) endpoint to accept changes for delivery_date
-export async function PUT(request: Request) {
-  try {
-    const { id, delivery_date } = await request.json();
-    const { data, error } = await supabase
-      .from('orders')
-      .update({ delivery_date, updated_at: new Date() })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ message: 'Order updated successfully', data });
+    if (deleteRes.error) throw deleteRes.error;
+
+    return NextResponse.json({
+      message: 'Order created successfully',
+      order: orderData,
+      payment: paymentData
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const user_id = searchParams.get('user_id');
-  if (!user_id) return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select('*')
-    .eq('user_id', user_id)
-    .order('created_at', { ascending: false });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ orders });
+  try {
+    const { searchParams } = new URL(request.url);
+    const user_id = searchParams.get('user_id');
+    // If no user_id provided, optionally return all orders (for admin)
+    const query = user_id ? { user_id } : {};
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .match(query)
+      .order('created_at', { ascending: false });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ orders: data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { id, status } = await request.json();
+    if (!id || !status) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .single();
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ message: 'Order status updated successfully', data });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
