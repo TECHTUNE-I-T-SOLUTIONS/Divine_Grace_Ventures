@@ -9,20 +9,19 @@ import CustomAlert from '@/components/CustomAlert';
 interface PaymentModalProps {
   totalAmount: number;
   email: string;
-  onSuccess: (
-    reference: string,
-    deliveryInfo: { address: string; phone: string; payer_name: string; note?: string }
-  ) => void;
+  orderId: number; // new prop for order id
+  onSuccess: (reference: string, deliveryInfo: { address: string; phone: string; payer_name: string; note?: string }) => void;
   onClose: () => void;
 }
 
-export default function PaymentModal({ totalAmount, email, onSuccess, onClose }: PaymentModalProps) {
+export default function PaymentModal({ totalAmount, email, orderId, onSuccess, onClose }: PaymentModalProps) {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryPhone, setDeliveryPhone] = useState('');
   const [payerName, setPayerName] = useState('');
   const [note, setNote] = useState('');
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
-
+  
+  // Use a sound file located in your public folder (e.g., public/sounds/success.mp3)
   const [playSuccess] = useSound('/sounds/success.mp3', { volume: 0.5 });
 
   const config = {
@@ -40,20 +39,26 @@ export default function PaymentModal({ totalAmount, email, onSuccess, onClose }:
       return;
     }
     initializePayment({
-      onSuccess: (reference) => {
+      onSuccess: async (reference) => {
         playSuccess();
         setAlertMessage({ type: 'success', message: "Payment successful!" });
-        // Create a notification after a successful payment
-        fetch('/api/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: `Payment successful with reference ${reference.reference}.`,
-            email, // you can also pass user_id if available
-            type: "payment_success"
-          })
-        });
-        // Call the parent's onSuccess callback with delivery info.
+        // Post a notification about the successful payment, including order id and amount.
+        try {
+          await fetch('/api/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: `Payment successful for Order ${orderId}. Reference: ${reference.reference}`,
+              type: 'payment',
+              email,         // optionally include user id if available
+              order_id: orderId,
+              amount: totalAmount
+            }),
+          });
+        } catch (error) {
+          console.error("Notification error:", error);
+        }
+        // Call the parent's onSuccess callback with delivery info
         onSuccess(reference.reference, {
           address: deliveryAddress,
           phone: deliveryPhone,

@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { Product } from './ProductCard';
+import CustomAlert from '@/components/CustomAlert';
+import { useAuth } from '@/context/AuthContext';
 
 interface AddToCartModalProps {
   product: Product;
@@ -12,12 +14,45 @@ interface AddToCartModalProps {
 }
 
 export default function AddToCartModal({ product, onClose, onAdd }: AddToCartModalProps) {
+  const { user } = useAuth(); // Get the logged-in user's details
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
+  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Call the onAdd callback (e.g. to update cart state)
     onAdd(quantity, note);
+
+    // Prepare a custom HTML notification message
+    const emailHtml = `
+      <div style="text-align: center; padding: 20px; background: #f8f8f8; font-family: sans-serif;">
+        <img src="https://yourdomain.com/logo.png" alt="Divine Grace Ventures" style="max-width: 150px; margin-bottom: 20px;" />
+        <h1 style="color: #333;">Item Added to Cart</h1>
+        <p style="font-size: 16px;">The product <strong>${product.name}</strong> has been added to your cart.</p>
+        <a href="https://yourdomain.com/cart" style="padding: 10px 20px; background: #0070f3; color: #fff; text-decoration: none; border-radius: 5px;">View Cart</a>
+      </div>
+    `;
+
+    // Send a notification email to the logged-in user (if available)
+    if (user?.email) {
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: emailHtml,
+            type: 'product_carted',
+            email: user.email,
+          }),
+        });
+        setAlert({ type: 'success', message: 'Item added to cart. A notification has been sent to your email.' });
+      } catch (error: any) {
+        setAlert({ type: 'error', message: 'Item added to cart but failed to send notification.' });
+      }
+    } else {
+      setAlert({ type: 'info', message: 'Item added to cart.' });
+    }
   };
 
   // Compute imageSrc: if product.image is not a full URL, generate one via the proxy endpoint.
@@ -89,6 +124,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
             Add to Cart
           </button>
         </form>
+        {alert && <CustomAlert type={alert.type} message={alert.message} />}
       </div>
     </div>
   );

@@ -1,10 +1,9 @@
-// app/(admin)/layout.tsx
 'use client';
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaSignOutAlt, FaUser, FaBars, FaCommentDots } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import useSound from 'use-sound';
 
@@ -14,8 +13,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [notificationCount, setNotificationCount] = useState<number>(0);
   const [prevCount, setPrevCount] = useState<number>(0);
   const [playNotification] = useSound('/sounds/notification.mp3', { volume: 0.5 });
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [unreadChats, setUnreadChats] = useState<number>(0);
 
-  // Define navigation links
   const navLinks = [
     { href: '/admin', label: 'Dashboard' },
     { href: '/admin/orders', label: 'Orders' },
@@ -46,6 +46,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [prevCount, playNotification]);
 
+  useEffect(() => {
+    async function fetchUnreadChats() {
+      try {
+        const res = await fetch('/api/admin/unread-chats');
+        const data = await res.json();
+        if (res.ok && data.unreadCount) {
+          setUnreadChats(data.unreadCount);
+        }
+      } catch (err: any) {
+        console.error("Error fetching unread chats:", err.message);
+      }
+    }
+    fetchUnreadChats();
+    const chatInterval = setInterval(fetchUnreadChats, 30000);
+    return () => clearInterval(chatInterval);
+  }, []);
+
   const handleLogout = () => {
     router.push('/');
   };
@@ -55,14 +72,29 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Admin Header */}
       <header className="flex items-center justify-between bg-gray-900 p-4 shadow">
         <div className="flex items-center space-x-3">
+          <button className="text-white lg:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            <FaBars size={28} />
+          </button>
           <img src="/images/logo.png" alt="Logo" className="h-10 w-10 rounded-lg" />
           <span className="text-2xl text-white font-bold">Admin Panel</span>
         </div>
         <div className="flex items-center space-x-4">
-          {/* Profile Icon Link */}
+          {/* Chat Icon */}
+          <Link href="/admin/chat" title="Admin-Customer Service Chat" passHref>
+            <button className="relative text-white">
+              <FaCommentDots size={28} />
+              {unreadChats > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {unreadChats}
+                </span>
+              )}
+            </button>
+          </Link>
+          {/* Profile Icon */}
           <Link href="/admin/profile" title="Admin Profile">
             <FaUser size={28} className="cursor-pointer text-white" />
           </Link>
+          {/* Logout Button */}
           <button onClick={handleLogout} className="flex items-center space-x-2 text-white hover:text-red-400">
             <FaSignOutAlt />
             <span>Logout</span>
@@ -71,7 +103,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </header>
       <div className="flex flex-1">
         {/* Sidebar Navigation */}
-        <aside className="w-64 bg-gray-800 text-white p-4">
+        <aside className={`bg-gray-800 text-white p-4 ${isSidebarOpen ? 'w-64' : 'w-0 lg:w-64'} transition-all duration-300 overflow-hidden`}>
           <nav>
             <ul className="space-y-2">
               {navLinks.map((link) => {
@@ -79,9 +111,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 return (
                   <li key={link.href}>
                     <Link href={link.href}>
-                      <button
-                        className={`w-full text-left px-4 py-2 rounded-full ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}
-                      >
+                      <button className={`w-full text-left px-4 py-2 rounded-full ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}>
                         {link.label}
                         {link.label === 'Notifications' && notificationCount > 0 && (
                           <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
