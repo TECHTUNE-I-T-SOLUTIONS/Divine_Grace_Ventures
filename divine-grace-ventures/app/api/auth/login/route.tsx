@@ -1,4 +1,3 @@
-// app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -27,6 +26,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
 
+  // Update user's is_online status to true
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ is_online: true })
+    .eq('id', user.id);
+
+  if (updateError) {
+    console.error('Error updating online status:', updateError.message);
+  }
+
   // Generate a JWT token that expires in 1 hour
   const token = jwt.sign(
     { id: user.id, email: user.email, userType: user.userType || 'user' },
@@ -37,7 +46,7 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ message: 'Login successful', token, user });
   response.cookies.set('auth-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // in development, secure should be false
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 60 * 60, // 1 hour in seconds
     path: '/',
     sameSite: 'lax',

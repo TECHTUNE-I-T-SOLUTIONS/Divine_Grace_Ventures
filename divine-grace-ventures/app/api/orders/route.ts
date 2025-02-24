@@ -1,3 +1,4 @@
+// app/api/orders/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -17,15 +18,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log("User ID for order:", user_id); // Debug: ensure user_id is present and correct
-
     // Calculate total amount from cart items (using user_quantity if available)
     const total = cart.reduce((acc: number, item: any) => {
       const qty = item.user_quantity || item.quantity || 0;
       return acc + (item.price * qty);
     }, 0);
 
-    // Insert order and return the inserted row
+    // Insert order record into orders table
     const orderRes = await supabase
       .from('orders')
       .insert([
@@ -50,7 +49,7 @@ export async function POST(request: Request) {
     }
     const orderData = orderRes.data[0];
 
-    // Insert a payment record
+    // Insert payment record into payments table
     const paymentRes = await supabase
       .from('payments')
       .insert([
@@ -99,13 +98,17 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
-    // If no user_id provided, optionally return all orders (for admin)
-    const query = user_id ? { user_id } : {};
-    const { data, error } = await supabase
+    // For admin view, when no user_id is provided, return all orders with payment details
+    let query = supabase
       .from('orders')
-      .select('*')
-      .match(query)
+      .select(`*, payments:payments(*)`)  // join the payments table to include all payment details
       .order('created_at', { ascending: false });
+
+    if (user_id) {
+      query = query.eq('user_id', user_id);
+    }
+
+    const { data, error } = await query;
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

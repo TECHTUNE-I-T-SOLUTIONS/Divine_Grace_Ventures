@@ -1,4 +1,4 @@
-// app/Admin/notifications/page.tsx
+// app/admin/notifications/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,8 +13,7 @@ export default function AdminNotificationsPage() {
   useEffect(() => {
     async function fetchNotifications() {
       try {
-        // Admin may see all notifications
-        const res = await fetch('/api/notifications');
+        const res = await fetch('/api/notifications', { credentials: 'include' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
         setNotifications(data.notifications);
@@ -32,13 +31,15 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="p-4 bg-gradient-to-r from-indigo-900 to-purple-900 min-h-screen text-white">
-      <h2 className="text-3xl font-bold mb-6">All Notifications</h2>
+      <h2 className="text-3xl font-bold mb-6">Admin Notifications</h2>
       {notifications.length === 0 ? (
         <p>No notifications found.</p>
       ) : (
-        notifications.map((notification) => (
-          <NotificationCard key={notification.id} notification={notification} />
-        ))
+        <div className="space-y-4">
+          {notifications.map((notification) => (
+            <NotificationCard key={notification.id} notification={notification} />
+          ))}
+        </div>
       )}
     </div>
   );

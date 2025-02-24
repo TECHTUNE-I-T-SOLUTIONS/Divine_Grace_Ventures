@@ -45,7 +45,7 @@ export default function CustomAlert({ type, message }: AlertProps) {
       : 'bg-blue-500';
 
   return (
-    <div className={`fixed top-4 right-4 z-[100] px-4 py-3 ${bgColor} rounded-lg text-white shadow-lg animate-fade-in-out`}>
+    <div className={`fixed top-4 right-4 px-4 py-3 ${bgColor} rounded-lg text-white shadow-lg animate-fade-in-out z-50`}>
       <div className="flex items-center">
         {icon}
         <span>{message}</span>

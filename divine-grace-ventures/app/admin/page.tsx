@@ -6,8 +6,10 @@ import { Button, Input, Card } from '@nextui-org/react';
 import { FaPlus, FaTag, FaDollarSign, FaListUl } from 'react-icons/fa';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminHomePage() {
+  const { user } = useAuth(); // Get the logged-in admin details
   // Form states
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
@@ -75,6 +77,27 @@ export default function AdminHomePage() {
       setNewProductQuantity('');
       setNewProductUnit('');
       setNewProductUnitPrice('');
+      
+      // Send email notification using the logged in admin's email
+      if (user?.email) {
+        const emailHtml = `
+          <div style="text-align: center; padding: 20px; background: #f8f8f8; font-family: sans-serif;">
+            <img src="https://yourdomain.com/logo.png" alt="Divine Grace Ventures" style="max-width: 150px; margin-bottom: 20px;" />
+            <h1 style="color: #333;">New Product Added</h1>
+            <p style="font-size: 16px;">A new product, <strong>${newProductName}</strong>, has been added to your inventory.</p>
+            <a href="https://yourdomain.com/admin" style="padding: 10px 20px; background: #0070f3; color: #fff; text-decoration: none; border-radius: 5px;">View Dashboard</a>
+          </div>
+        `;
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: emailHtml,
+            type: 'product_added',
+            email: user.email, // automatically fetched from AuthContext
+          }),
+        });
+      }
       setLoading(false);
     } catch (error: any) {
       setAlert({ type: 'error', message: error.message || 'Error adding product' });

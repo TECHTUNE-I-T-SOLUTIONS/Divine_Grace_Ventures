@@ -1,20 +1,40 @@
-// app/admin/profile/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
 import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminProfilePage() {
   const { user, setUser } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [fullName, setFullName] = useState(user?.full_name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState(user?.phone || '');
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [alertMessage, setAlertMessage] = useState<string>('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/admin/profile', { credentials: 'include' });
+        const data = await res.json();
+        if (res.ok && data.admin) {
+          setProfile(data.admin);
+          setFullName(data.admin.full_name || '');
+          setPhone(data.admin.phone || '');
+        } else {
+          setAlertMessage(data.error || 'Failed to load profile');
+        }
+      } catch (err: any) {
+        setAlertMessage(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProfile();
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +49,7 @@ export default function AdminProfilePage() {
     try {
       const res = await fetch('/api/admin/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'user-id': user?.id || '' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -46,17 +66,18 @@ export default function AdminProfilePage() {
     setLoading(false);
   };
 
-  if (!user) return <CustomLoader />;
+  if (loading) return <CustomLoader />;
+  if (!profile) return <div>{alertMessage || 'No profile data'}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 flex items-center">
+    <div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-indigo-800 to-purple-800 rounded shadow">
+      <h2 className="text-2xl text-white justify-center font-bold mb-4 flex items-center">
         <FaUser className="mr-2" /> Admin Profile
       </h2>
       {alertMessage && <div className="mb-4 text-red-500">{alertMessage}</div>}
       <form onSubmit={handleSave}>
         <div className="mb-4">
-          <label className="block mb-1 font-semibold">
+          <label className="block mb-1 text-white font-semibold">
             <FaUser className="inline mr-1" /> Full Name
           </label>
           <input
@@ -68,18 +89,18 @@ export default function AdminProfilePage() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1 font-semibold">
-            <FaEnvelope className="inline mr-1" /> Email
+          <label className="block mb-1 text-white font-semibold">
+            <FaEnvelope className="inline mr-1" /> Email (not editable)
           </label>
           <input
             type="email"
-            value={email}
+            value={profile.email}
             disabled
             className="w-full border rounded p-2 bg-gray-200"
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1 font-semibold">
+          <label className="block mb-1 text-white font-semibold">
             <FaPhone className="inline mr-1" /> Phone
           </label>
           <input
@@ -91,7 +112,7 @@ export default function AdminProfilePage() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1 font-semibold">
+          <label className="block mb-1 text-white font-semibold">
             <FaLock className="inline mr-1" /> New Password (leave blank to keep unchanged)
           </label>
           <input
@@ -103,7 +124,7 @@ export default function AdminProfilePage() {
           />
         </div>
         <div className="mb-4">
-          <label className="block mb-1 font-semibold">
+          <label className="block mb-1 text-white font-semibold">
             <FaLock className="inline mr-1" /> Confirm Password
           </label>
           <input

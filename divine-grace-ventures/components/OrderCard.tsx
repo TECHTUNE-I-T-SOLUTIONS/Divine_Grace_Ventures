@@ -16,7 +16,7 @@ export interface OrderItem {
 export interface Order {
   id: number;
   user_id: string;
-  order_items: OrderItem[] | string; // Could be an array or a JSON string
+  order_items: OrderItem[] | string; // Could be an array or a JSON string; we’ll parse if needed
   total: number;
   delivery_address: string;
   delivery_phone: string;
@@ -25,12 +25,13 @@ export interface Order {
   status: string; // e.g., 'pending' or 'delivered'
   created_at: string;
   updated_at: string;
+  // This flag tells the card that it’s being viewed by an admin
   adminView?: boolean;
 }
 
 interface OrderCardProps {
   order: Order;
-  // Optional callback for admin status update
+  // Optional callback for when admin updates the status
   onStatusUpdate?: (orderId: number, newStatus: string) => void;
 }
 
@@ -90,9 +91,9 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
                   />
                 )}
                 <div>
-                  <p className="text-sm font-bold text-white">{item.products.name}</p>
+                  <p className="text-sm font-bold text-white">{item.name}</p>
                   <p className="text-xs text-gray-300">
-                    {item.user_quantity || item.quantity} (bags, packs, sacks) @ ₦{item.price} each
+                    {item.user_quantity || item.quantity} {item.unit || 'unit'} @ ₦{item.price} each
                   </p>
                 </div>
               </div>
