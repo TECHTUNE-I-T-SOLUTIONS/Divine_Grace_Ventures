@@ -27,8 +27,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
 
+  // Update admin's is_active to true
+  const { error: updateError } = await supabase
+    .from('admins')
+    .update({ is_active: true })
+    .eq('id', admin.id);
+  if (updateError) {
+    console.error('Error updating admin is_active status:', updateError.message);
+  }
+
   // Generate a JWT token for the admin.
-  // Ensure that you have JWT_SECRET set in your environment.
   const token = jwt.sign(
     { id: admin.id, email: admin.email, userType: 'admin' },
     process.env.JWT_SECRET!,
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
   response.cookies.set('auth-token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 3600, // 1 hour in seconds
+    maxAge: 3600,
     path: '/',
     sameSite: 'lax',
   });

@@ -6,115 +6,93 @@ import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 
 interface AdminChatPanelProps {
-  selectedUser: string; // This is the user's UUID
+  selectedUser: string; // User's UUID as string
   supabase: any;
 }
 
 export default function AdminChatPanel({ selectedUser, supabase }: AdminChatPanelProps) {
-  const { user } = useAuth(); // Admin's auth info (admin.id is an integer)
+  const { user } = useAuth(); // Admin's auth info; admin.id is an integer
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Debug: log admin info
-  useEffect(() => {
-    console.log("Admin User Object:", user);
-    console.log("Admin User ID (Integer):", user?.id);
-  }, [user]);
+  // Ensure we have the admin's id as an integer.
+  const adminId = user?.id;
 
-  // Fetch conversation messages (both directions)
   useEffect(() => {
+    if (!adminId) {
+      console.error("Error: Admin user ID is missing.");
+      return;
+    }
     async function fetchMessages() {
-      if (!user?.id) {
-        console.error("Error: Admin user ID is missing.");
-        return;
-      }
       setLoading(true);
-
-      // Combine conditions: either (admin -> selected user) OR (selected user -> admin)
+      // Fetch messages for the conversation between this admin and the selected user.
       const { data, error } = await supabase
         .from('chats')
         .select('*')
-        .or(`(sender_id.eq.${user.id} and receiver_id.eq.${selectedUser}),(sender_id.eq.${selectedUser} and receiver_id.eq.${user.id})`)
+        .eq('admin_id', adminId)
+        .eq('user_id', selectedUser)
         .order('created_at', { ascending: true });
-
+      
       if (error) {
         console.error('Error fetching messages:', error.message);
       } else {
-        console.log("Fetched Messages:", data);
         setMessages(data || []);
       }
       setLoading(false);
     }
-
     fetchMessages();
 
-    // Set up realtime subscriptions for both directions
-    const channel = supabase.channel(`chat:${selectedUser}`);
-
-    // When a message is sent from the selected user to the admin:
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chats',
-        filter: `sender_id.eq.${selectedUser} and receiver_id.eq.${user?.id}`
-      },
-      (payload) => {
-        console.log("New Incoming Message:", payload.new);
-        setMessages((prev) => [...prev, payload.new]);
-      }
-    );
-
-    // When a message is sent from the admin to the selected user:
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chats',
-        filter: `sender_id.eq.${user?.id} and receiver_id.eq.${selectedUser}`
-      },
-      (payload) => {
-        console.log("New Outgoing Message:", payload.new);
-        setMessages((prev) => [...prev, payload.new]);
-      }
-    );
-
-    channel.subscribe();
+    // Subscribe to realtime inserts for this conversation.
+    const channel = supabase
+      .channel(`chat:${adminId}:${selectedUser}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chats',
+          filter: `admin_id.eq.${adminId} and user_id.eq.'${selectedUser}'`
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedUser, supabase, user]);
+  }, [selectedUser, supabase, adminId]);
 
-  // Send a new message from admin to the selected user
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
-
-    if (!user?.id) {
+    if (!adminId) {
       console.error("Error: Admin user ID is missing. Cannot send message.");
       return;
     }
 
     const payload = {
-      sender_id: user.id, // Admin's integer id
-      receiver_id: selectedUser, // User's UUID
+      admin_id: adminId,
+      user_id: selectedUser,
+      sender_role: 'admin',
       message: newMessage,
       is_read: false,
       created_at: new Date().toISOString(),
     };
 
-    console.log("Sending Message Payload:", payload);
-
     const { error } = await supabase.from('chats').insert([payload]);
-
     if (error) {
       console.error('Error sending message:', error.message);
     } else {
       setNewMessage('');
     }
+  };
+
+  // Function to format the timestamp
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -126,17 +104,17 @@ export default function AdminChatPanel({ selectedUser, supabase }: AdminChatPane
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`p-2 ${msg.sender_id === user?.id ? 'text-right' : 'text-left'}`}
+              className={`p-2 ${msg.sender_role === 'admin' ? 'text-right' : 'text-left'}`}
             >
               <div
-                className={`inline-block max-w-md px-4 py-2 rounded-lg ${
-                  msg.sender_id === user?.id
-                    ? 'bg-blue-200 text-blue-900'
-                    : 'bg-gray-200 text-gray-800'
-                }`}
+                className={`inline-block max-w-md px-4 py-2 rounded-lg ${msg.sender_role === 'admin' ? 'bg-blue-900 text-gray-100 font-bold' : 'bg-pink-900 text-gray-100 font-bold'}`}
               >
                 {msg.message}
               </div>
+              {/* Timestamp section */}
+              <p className="text-xs text-gray-900 mt-1">
+                {formatTimestamp(msg.created_at)}
+              </p>
             </div>
           ))
         ) : (
