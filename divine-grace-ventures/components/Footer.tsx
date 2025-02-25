@@ -10,9 +10,9 @@ export default function Footer() {
     <footer className="bg-gray-800 text-white py-8">
       <div className="container mx-auto flex justify-between items-center">
         {/* Social Links Section */}
-        <div className="flex flex-col items-start space-y-2">
+        <div className="ml-4 flex flex-col items-start space-y-2">
           <h3 className="text-lg font-semibold">Our Socials</h3>
-          <div className="flex space-x-6">
+          <div className="flex space-x-3">
             <a href="#" aria-label="Facebook" className="text-2xl hover:text-blue-600">
               <FaFacebook />
             </a>
@@ -25,20 +25,20 @@ export default function Footer() {
             <a href="#" aria-label="TikTok" className="text-2xl hover:text-black">
               <FaTiktok />
             </a>
-            <a href="#" aria-label="WhatsApp" className="text-2xl hover:text-green-500">
+            <a href="https://wa.me/2348144409511" aria-label="WhatsApp" className="text-2xl hover:text-green-500">
               <FaWhatsapp />
             </a>
-          </div>
+          </div> 
         </div>
 
         {/* Developers Links Section */}
-        <div className="flex flex-col items-start space-y-2">
-          <h3 className="text-lg font-semibold">Our Developers</h3>
-          <div className="flex space-x-6">
-            <a href="#" aria-label="GitHub" className="text-2xl hover:text-gray-600">
+        <div className="mr-4 flex flex-col items-start space-y-2">
+          <h3 className="text-lg font-semibold">Our Developer</h3>
+          <div className="flex space-x-3">
+            <a href="https://github.com/TECHTUNE-I-T-SOLUTIONS" aria-label="GitHub" className="text-2xl hover:text-gray-600">
               <FaGithub />
             </a>
-            <a href="#" aria-label="StackOverflow" className="text-2xl hover:text-orange-600">
+            <a href="https://stackoverflow.com/users/28175898/prince-techtune" aria-label="StackOverflow" className="text-2xl hover:text-orange-600">
               <FaStackOverflow />
             </a>
           </div>
@@ -46,7 +46,7 @@ export default function Footer() {
       </div>
 
       {/* Cookie Notice */}
-      <div className="text-sm text-gray-400 text-center mt-4">
+      <div className="text-sm text-gray-400 m-2 text-center mt-4">
         <p>
           We use cookies to enhance your experience. By continuing to visit this site, you agree to our use of cookies.
         </p>
