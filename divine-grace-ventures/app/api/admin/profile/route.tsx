@@ -4,8 +4,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { cookies } from 'next/headers';
 
 export async function GET() {
-  // Use next/headers cookies helper to get the cookie store
-  const cookieStore = cookies();
+  // Await cookies() since it's now async
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
   
   if (!token) {
@@ -15,10 +15,9 @@ export async function GET() {
   try {
     // Decode the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    // decoded should contain the admin id
     const adminId = (decoded as any).id;
     
-    // Now fetch admin details from the "admins" table
+    // Fetch admin details from the "admins" table
     const { data, error } = await supabase
       .from('admins')
       .select('*')
@@ -36,7 +35,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('auth-token')?.value;
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -157,20 +157,20 @@ export default function DashboardHeader({ sidebarOpen, toggleSidebar }: Dashboar
         .animate-marquee {
           display: inline-block;
           white-space: nowrap;
-          animation: marquee 30s linear infinite;
+          animation: marquee 120s linear infinite;
           position: relative;
           min-width: 100vw; /* Ensures text starts from the right edge */
         }
 
         @media (max-width: 768px) {
           .animate-marquee {
-            animation-duration: 30s;
+            animation-duration: 120s;
           }
         }
 
         @media (max-width: 480px) {
           .animate-marquee {
-            animation-duration: 30s;
+            animation-duration: 120s;
           }
         }
       `}</style>

@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     .from('admins')
     .update({ is_active: true })
     .eq('id', admin.id);
+    
   if (updateError) {
     console.error('Error updating admin is_active status:', updateError.message);
   }
@@ -43,9 +44,37 @@ export async function POST(request: Request) {
     { expiresIn: '1h' }
   );
 
-  const response = NextResponse.json({ message: 'Admin login successful', token, admin });
+  // Create response object
+  const response = NextResponse.json({ 
+    message: 'Admin login successful', 
+    token, 
+    admin: {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role
+    } 
+  });
+
+  // Set multiple cookies (auth-token, admin ID, and email)
   response.cookies.set('auth-token', token, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 3600, // 1 hour
+    path: '/',
+    sameSite: 'lax',
+  });
+
+  response.cookies.set('admin_id', admin.id, {
+    httpOnly: false, // Can be accessed by frontend scripts if needed
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 3600,
+    path: '/',
+    sameSite: 'lax',
+  });
+
+  response.cookies.set('admin_email', admin.email, {
+    httpOnly: false, // Can be accessed by frontend scripts
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600,
     path: '/',

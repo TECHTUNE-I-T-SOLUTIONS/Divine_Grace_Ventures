@@ -111,6 +111,7 @@ export default function ProductCard({
                 className="border border-blue-400 text-blue-300 px-3 py-1 rounded hover:bg-white hover:text-black transition-colors"
                 title="Add to Cart"
                 onClick={() => onAddToCart && onAddToCart(product)}
+                disabled={!product.available}
               >
                 <FaCartPlus className="inline mr-1" />
                 Add to Cart

@@ -115,21 +115,23 @@ export default function DashboardSettings() {
           />
         </div>
         <div className="flex items-center justify-between">
-          <label className="text-lg">SMS Notifications</label>
+          <label className="text-lg">SMS Notifications <span className="text-gray-500">(Coming Soon)</span></label>
           <input
             type="checkbox"
             checked={smsNotifications}
             onChange={(e) => setSmsNotifications(e.target.checked)}
             className="toggle-checkbox"
+            disabled
           />
         </div>
         <div className="flex items-center justify-between">
-          <label className="text-lg">Dark Mode</label>
+          <label className="text-lg">Dark Mode <span className="text-gray-500">(Coming Soon)</span></label>
           <input
             type="checkbox"
             checked={darkMode}
             onChange={(e) => setDarkMode(e.target.checked)}
             className="toggle-checkbox"
+            disabled
           />
         </div>
       </div>

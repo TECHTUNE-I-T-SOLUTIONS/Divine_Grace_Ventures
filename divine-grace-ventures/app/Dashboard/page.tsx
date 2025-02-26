@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { FaSearch, FaSort } from 'react-icons/fa';
 import ProductCard, { Product } from '@/components/ProductCard';
 import CustomLoader from '@/components/CustomLoader';
@@ -78,7 +79,17 @@ export default function DashboardHomePage() {
 
   if (authLoading || loading) return <CustomLoader />;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
-  if (!user) return <div>Please log in to view the dashboard or refresh this page.</div>;
+  if (!user) {
+    return (
+      <div className="text-center p-4">
+        <h2>Please refresh this page or go back to log in to view the dashboard</h2>
+        {/* Optionally, add a button to redirect to login */}
+        <Link href="/user">
+          <button className="text-white p-2">Go to Login</button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">

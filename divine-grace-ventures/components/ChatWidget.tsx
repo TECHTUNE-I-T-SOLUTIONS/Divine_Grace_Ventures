@@ -34,15 +34,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
         console.error('Error fetching messages:', error.message);
       } else {
         setMessages(data || []);
-
-        // Mark unread messages from admin as read
-        const unreadAdminMessages = data.filter(
-          (msg) => msg.user_id === adminId && !msg.is_read
-        );
-
-        if (unreadAdminMessages.length > 0) {
-          await markMessagesAsRead(unreadAdminMessages.map((msg) => msg.id));
-        }
+        markUnreadAdminMessagesAsRead(data);
       }
     }
 
@@ -52,30 +44,51 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       .channel(`chat_widget:${user.id}`)
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chats',
-          filter: `(user_id.eq.${user.id} and admin_id.eq.${adminId}) or (user_id.eq.${adminId} and admin_id.eq.${user.id})`
-        },
+        { event: 'INSERT', schema: 'public', table: 'chats' },
         async (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          const newMsg = payload.new;
+          setMessages((prev) => [...prev, newMsg]);
 
-          // If a new message from the admin is received, mark it as read
-          if (payload.new.user_id === adminId && !payload.new.is_read) {
-            await markMessagesAsRead([payload.new.id]);
+          if (newMsg.user_id === adminId && !newMsg.is_read) {
+            await markMessagesAsRead([newMsg.id]);
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chats' },
+        (payload) => {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
+            )
+          );
         }
       )
       .subscribe();
 
+    const readReceiptInterval = setInterval(() => {
+      fetchMessages();
+    }, 5000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(readReceiptInterval);
     };
   }, [user]);
 
+  const markUnreadAdminMessagesAsRead = async (data: any[]) => {
+    const unreadMessages = data.filter(
+      (msg) => msg.user_id === adminId && !msg.is_read
+    );
+
+    if (unreadMessages.length > 0) {
+      await markMessagesAsRead(unreadMessages.map((msg) => msg.id));
+    }
+  };
+
   const markMessagesAsRead = async (messageIds: number[]) => {
-    if (!messageIds || messageIds.length === 0) return;
+    if (!messageIds.length) return;
 
     const { error } = await supabase
       .from('chats')
@@ -85,7 +98,6 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
     if (error) {
       console.error('Error marking messages as read:', error.message);
     } else {
-      // Update local state to reflect read status
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
           messageIds.includes(msg.id) ? { ...msg, is_read: true } : msg
@@ -95,8 +107,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
   };
 
   const sendMessage = async () => {
-    if (!user) return;
-    if (!newMessage.trim() && !file) return;
+    if (!user || (!newMessage.trim() && !file)) return;
 
     let imageUrl: string | null = null;
     if (file) {
@@ -105,6 +116,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       const { data, error } = await supabase.storage
         .from('chat-images')
         .upload(fileName, file);
+
       if (error) {
         console.error('File upload error:', error.message);
       } else {
@@ -119,6 +131,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       message: newMessage || (imageUrl ? 'Image sent' : ''),
       image_url: imageUrl,
       created_at: new Date().toISOString(),
+      is_read: false,
     };
 
     const { error } = await supabase.from('chats').insert([payload]);
@@ -170,7 +183,10 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
                   )}
                 </div>
                 <div className="text-xs text-gray-500 text-center mt-1">
-                  {new Date(msg.created_at).toLocaleTimeString()}
+                  {new Date(msg.created_at).toLocaleTimeString()}{" "}
+                  {msg.is_read && msg.sender_role === 'user' ? (
+                    <span className="text-green-500 ml-1">✓✓</span>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -194,11 +210,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
           id="chat-file"
           type="file"
           className="hidden"
-          onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              setFile(e.target.files[0]);
-            }
-          }}
+          onChange={(e) => e.target.files && setFile(e.target.files[0])}
         />
         <button onClick={sendMessage} className="text-blue-500">
           <FaPaperPlane size={24} />

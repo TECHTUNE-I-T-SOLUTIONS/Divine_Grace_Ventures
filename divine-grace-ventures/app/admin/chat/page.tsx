@@ -1,51 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import AdminChatPanel from '@/components/AdminChatPanel';
-import { FaUsers } from 'react-icons/fa';
+import { FaUsers, FaBars } from 'react-icons/fa';
 
 const AdminChatPage = () => {
-  // Create the Supabase client on the client side (for chat data)
   const [supabase] = useState(() => createBrowserSupabaseClient());
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch all registered users from your API route
   useEffect(() => {
     async function fetchUsers() {
       try {
         const res = await fetch('/api/users');
         const json = await res.json();
-        if (json.error) {
-          console.error('Error fetching users:', json.error);
-        } else {
-          setUsers(json.users || []);
-        }
+        setUsers(json.users || []);
       } catch (err: any) {
         console.error('Error fetching users:', err.message);
       }
     }
     fetchUsers();
-
-    // Poll for new users every minute
     const interval = setInterval(fetchUsers, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Close chat panel on Escape key press
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedUser(null);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setSidebarOpen(false);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Helper: render a chat list item
   const renderChatItem = (user: any) => {
     const isActive = selectedUser === user.id;
     return (
@@ -67,13 +59,17 @@ const AdminChatPage = () => {
     );
   };
 
-  // Retrieve details for the active chat, if available
   const activeChatUser = users.find((u) => u.id === selectedUser);
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar: Chats */}
-      <aside className="w-1/4 bg-gray-800 p-4 text-white">
+      {/* Sidebar (Hidden on Small Screens Until Opened) */}
+      <aside
+        ref={sidebarRef}
+        className={`${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } fixed top-18 left-0 h-full sm:h-auto w-[200px] sm:w-1/4 sm:w-[200px] bg-gray-800 p-4 text-white transition-transform duration-300 z-50 sm:z-20 sm:relative sm:translate-x-0`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold">Chats</h2>
           <button
@@ -93,7 +89,6 @@ const AdminChatPage = () => {
             )}
           </div>
         )}
-        {/* Always list the active chats */}
         <div className="space-y-1">
           {users.length === 0 ? (
             <p className="text-sm text-gray-400">No active chats.</p>
@@ -105,15 +100,18 @@ const AdminChatPage = () => {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        <header className="bg-gray-900 p-4 shadow text-white">
-          <h1 className="text-2xl font-bold">Admin Chat</h1>
-          {activeChatUser && (
-            <p className="mt-2 text-lg">
-              {activeChatUser.username || activeChatUser.email}
-            </p>
-          )}
+        <header className="bg-gray-900 p-2 shadow text-white flex mr-4 items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {/* Hamburger Menu */}
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-white sm:hidden">
+              <FaBars size={30} />
+            </button>
+            <h1 className="text-xl font-bold">Admin Chat</h1>
+          </div>
+          {activeChatUser && <p className="mt-2 mr-4 text-sm">{activeChatUser.username || activeChatUser.email}</p>}
         </header>
-        <div className="flex-1 p-4 overflow-y-auto bg-gradient-to-r from-gray-600 to-purple-500">
+
+        <div className="flex-1 p-2 overflow-y-auto bg-gradient-to-r from-gray-600 to-purple-500 mr-4">
           {selectedUser ? (
             <AdminChatPanel selectedUser={selectedUser} supabase={supabase} />
           ) : (

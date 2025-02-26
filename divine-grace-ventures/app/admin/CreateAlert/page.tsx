@@ -105,7 +105,8 @@ export default function CreateAlert() {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
-        <button onClick={createAlert} className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button onClick={createAlert} className="bg-blue-500 text-white px-4 py-2 rounded"
+        title="Create Alert">
           <FaPlus />
         </button>
       </div>
@@ -115,7 +116,7 @@ export default function CreateAlert() {
             {editingId === alert.id ? (
               <input
                 type="text"
-                className="border p-2 rounded w-full"
+                className="border text-black p-2 rounded w-full"
                 value={editingMessage}
                 onChange={(e) => setEditingMessage(e.target.value)}
               />
@@ -128,11 +129,13 @@ export default function CreateAlert() {
                   <FaSave />
                 </button>
               ) : (
-                <button onClick={() => { setEditingId(alert.id); setEditingMessage(alert.message); }} className="text-blue-600">
+                <button onClick={() => { setEditingId(alert.id); setEditingMessage(alert.message); }} className="text-blue-600"
+                title="Edit the Alert">
                   <FaEdit />
                 </button>
               )}
-              <button onClick={() => deleteAlert(alert.id)} className="text-red-600">
+              <button onClick={() => deleteAlert(alert.id)} className="text-red-600"
+              title="Delete the Alert">
                 <FaTrash />
               </button>
             </div>

@@ -134,6 +134,32 @@ export default function AuthPage() {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (!email) {
+      setAlert({ type: 'error', message: 'Please enter your email first.' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to resend OTP.');
+      }
+
+      setAlert({ type: 'success', message: 'A new OTP has been sent to your email.' });
+    } catch (error: any) {
+      setAlert({ type: 'error', message: error.message || 'Error resending OTP.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setAlert(null);
@@ -238,14 +264,14 @@ export default function AuthPage() {
           />
         </div>
         <div>
-          <label htmlFor="signup-phone" className="block mb-1 text-white">Phone Number</label>
+          <label htmlFor="signup-phone" className="block mb-1 text-white">Phone Number (include the country code)</label>
           <input
             id="signup-phone"
             type="text"
             className="w-full px-3 py-2 rounded bg-gray-700 text-white"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g., +234xxxxxxxxxx"
+            placeholder="e.g., +234xxxxxxxxxx (make sure to include +234)"
             required
           />
         </div>
@@ -333,14 +359,16 @@ export default function AuthPage() {
         </button>
       </form>
       {/* Resend OTP button */}
-      <button 
-        type="button"
-        title="Resend OTP"
-        onClick={sendOtp}
-        className="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 mt-4"
-      >
-        Resend OTP
-      </button>
+      <p className="text-white">
+        Didn't receive an OTP?{' '}
+        <button
+          onClick={handleResendOtp}
+          className="text-white py-2 rounded hover:bg-purple-600 mt-4"
+          title="Resend OTP"
+        >
+          Resend OTP
+        </button>
+      </p>
     </div>
   );
 

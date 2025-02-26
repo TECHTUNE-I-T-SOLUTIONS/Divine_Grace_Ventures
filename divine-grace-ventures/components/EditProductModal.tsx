@@ -1,7 +1,7 @@
 // components/EditProductModal.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Product } from './ProductCard';
 import { FaTimes } from 'react-icons/fa';
 import CustomLoader from './CustomLoader';
@@ -21,6 +21,15 @@ export default function EditProductModal({ product, onClose, onUpdate }: EditPro
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+useEffect(() => {
+
+},);
+
+  const imageSrc =
+    product.image && !product.image.startsWith('http')
+      ? `/api/proxy-image?filePath=${encodeURIComponent(product.image)}`
+      : product.image || '';
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
@@ -85,7 +94,7 @@ export default function EditProductModal({ product, onClose, onUpdate }: EditPro
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center z-50" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative overflow-auto max-h-[80vh]">
           <button className="absolute top-2 right-2 text-gray-700" onClick={onClose}>
             <FaTimes size={20} />
           </button>
@@ -137,7 +146,7 @@ export default function EditProductModal({ product, onClose, onUpdate }: EditPro
               <label className="block text-gray-700">Image</label>
               {image && (
                 <div className="mb-2">
-                  <img src={image} alt="Product" className="w-full h-32 object-cover rounded" />
+                  <img src={imageSrc} alt="Product" className="w-full h-32 object-cover rounded" />
                 </div>
               )}
               <input
