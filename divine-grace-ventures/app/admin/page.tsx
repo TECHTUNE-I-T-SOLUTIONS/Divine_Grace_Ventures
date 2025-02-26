@@ -1,11 +1,12 @@
 // app/admin/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Input, Card } from '@nextui-org/react';
 import { FaPlus, FaTag, FaDollarSign, FaListUl } from 'react-icons/fa';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
+import OrderCard, { Order } from '@/components/OrderCard';
 import { useAuth } from '@/context/AuthContext';
 
 export default function AdminHomePage() {
@@ -21,6 +22,25 @@ export default function AdminHomePage() {
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        // Fetch all orders from your API endpoint (ensure it returns { orders: [...] })
+        const res = await fetch('/api/orders');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch orders');
+        setOrders(data.orders);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrders();
+  }, []);
+
 
   // Handle file upload via API endpoint (using Supabase Storage)
   const handleImageUpload = async (file: File) => {
@@ -78,26 +98,6 @@ export default function AdminHomePage() {
       setNewProductUnit('');
       setNewProductUnitPrice('');
       
-      // Send email notification using the logged in admin's email
-      if (user?.email) {
-        const emailHtml = `
-          <div style="text-align: center; padding: 20px; background: #f8f8f8; font-family: sans-serif;">
-            <img src="https://yourdomain.com/logo.png" alt="Divine Grace Ventures" style="max-width: 150px; margin-bottom: 20px;" />
-            <h1 style="color: #333;">New Product Added</h1>
-            <p style="font-size: 16px;">A new product, <strong>${newProductName}</strong>, has been added to your inventory.</p>
-            <a href="https://yourdomain.com/admin" style="padding: 10px 20px; background: #0070f3; color: #fff; text-decoration: none; border-radius: 5px;">View Dashboard</a>
-          </div>
-        `;
-        await fetch('/api/notifications', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: emailHtml,
-            type: 'product_added',
-            email: user.email, // automatically fetched from AuthContext
-          }),
-        });
-      }
       setLoading(false);
     } catch (error: any) {
       setAlert({ type: 'error', message: error.message || 'Error adding product' });
@@ -188,8 +188,8 @@ export default function AdminHomePage() {
                     onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
                     className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
                   >
-                    <option value="yes">Available</option>
-                    <option value="no">Not Available</option>
+                    <option value="yes" className="w-auto">Available</option>
+                    <option value="no" className="w-auto">Not Available</option>
                   </select>
                 </div>
                 <Button
@@ -206,9 +206,15 @@ export default function AdminHomePage() {
             <div>
               <Card className="p-2 bg-gray-800 rounded-xl shadow-lg" css={{ p: '2rem' }}>
                 <h3 className="text-xl text-center font-bold mb-4">Recent Orders</h3>
-                <p className="break-words">
-                  This section should display recent orders. (Or you can view it by checking the navigation bar.)
-                </p>
+                {orders.length === 0 ? (
+                  <p>No orders found.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <OrderCard key={order.id} order={{ ...order, adminView: true }} />
+                    ))}
+                  </div>
+                )}
               </Card>
             </div>
           </div>

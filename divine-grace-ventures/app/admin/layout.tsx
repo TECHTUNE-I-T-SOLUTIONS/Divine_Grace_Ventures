@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <FaBars size={24} />
             </button>
             <img src="/images/logo.png" alt="Logo" className="h-8 w-8 rounded-lg" />
-            <span className="text-sm text-white font-bold">Admin Panel</span>
+            <span className="text-sm  text-white font-bold sm:text-xl">Admin Panel</span>
           </div>
           <div className="flex items-center space-x-2">
             <Link href="/admin/CreateAlert" title="Manage Alerts" passHref>

@@ -1,4 +1,4 @@
-'use client'; 
+'use client';
 
 import { useEffect, useState } from 'react';
 import { FaUser } from 'react-icons/fa';
@@ -32,35 +32,35 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-r from-indigo-900 to-purple-900 min-h-screen text-white">
-      <h1 className="text-4xl font-extrabold text-white mb-6 text-center">User Feedback</h1>
-      <div className="overflow-x-auto shadow-md rounded-lg bg-white p-4">
+    <div className="p-1 bg-gradient-to-r from-indigo-900 to-purple-900 min-h-screen text-white">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-6 text-center">User Feedback</h1>
+      <div className="overflow-x-auto shadow-md rounded-lg bg-white p-1">
         <table className="min-w-full table-auto border-collapse">
-          <thead className="bg-purple-700 text-white text-lg">
+          <thead className="bg-purple-700 text-white text-xs sm:text-sm">
             <tr>
-              <th className="px-6 py-3 text-left">#</th>
-              <th className="px-6 py-3 text-left">User</th>
-              <th className="px-6 py-3 text-left">Message</th>
-              <th className="px-6 py-3 text-left">Date</th>
+              <th className="px-2 sm:px-3 py-2 text-left">#</th>
+              <th className="px-2 sm:px-3 py-2 text-left">User</th>
+              <th className="px-2 sm:px-3 py-2 text-left">Message</th>
+              <th className="px-2 sm:px-3 py-2 text-left">Date</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-xs sm:text-sm">
             {feedbacks.map((feedback, index) => (
               <tr key={feedback.created_at} className="hover:bg-gray-100 transition-all">
-                <td className="border-t border-gray-300 px-6 py-3 text-lg font-semibold text-gray-700">
+                <td className="border-t border-gray-300 px-2 sm:px-2 py-2 text-sm font-semibold text-gray-700">
                   {index + 1}
                 </td>
-                <td className="border-t border-gray-300 px-6 py-3">
-                  <div className="flex items-center space-x-2 text-lg">
-                    <FaUser size={20} className="text-indigo-600" />
-                    <span className="font-semibold text-gray-800">{feedback.user_id}</span>
+                <td className="border-t border-gray-300 px-1 sm:px-1 py-2">
+                  <div className="flex items-center space-x-2 text-sm sm:text-lg">
+                    <FaUser size={18} className="text-indigo-600" />
+                    <span className="text-xs sm:text-sm text-gray-800">{feedback.user_id}</span>
                   </div>
                 </td>
-                <td className="border-t border-gray-300 px-6 py-3 text-gray-800">
+                <td className="border-t border-gray-300 px-4 sm:px-6 py-3 text-gray-800">
                   <p className="truncate max-w-xs">{feedback.message}</p>
                 </td>
-                <td className="border-t border-gray-300 px-6 py-3 text-gray-600">
-                  <span className="text-sm">{new Date(feedback.created_at).toLocaleString()}</span>
+                <td className="border-t border-gray-300 px-4 sm:px-6 py-3 text-gray-600">
+                  <span className="text-xs sm:text-sm">{new Date(feedback.created_at).toLocaleString()}</span>
                 </td>
               </tr>
             ))}

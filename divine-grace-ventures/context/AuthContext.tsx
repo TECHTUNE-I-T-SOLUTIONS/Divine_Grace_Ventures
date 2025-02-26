@@ -1,4 +1,3 @@
-// context/AuthContext.tsx
 'use client';
 
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
@@ -7,7 +6,6 @@ export interface User {
   id: string;
   email: string;
   userType: 'admin' | 'user';
-  // Additional fields as needed
 }
 
 interface AuthContextType {
