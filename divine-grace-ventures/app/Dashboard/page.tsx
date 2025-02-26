@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -25,8 +24,12 @@ export default function DashboardHomePage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch products');
         setProducts(data.products);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
       } finally {
         setLoading(false);
       }
@@ -72,8 +75,12 @@ export default function DashboardHomePage() {
       if (!res.ok) throw new Error(data.error || 'Failed to add to cart');
       console.log('Added to cart:', data);
       setSelectedProduct(null);
-    } catch (error: any) {
-      console.error('Add to cart error:', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Add to cart error:', error.message);
+      } else {
+        console.error('Add to cart error: An unexpected error occurred');
+      }
     }
   };
 

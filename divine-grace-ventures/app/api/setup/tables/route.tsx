@@ -1,8 +1,7 @@
-// app/api/setup/tables/route.ts
 import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) { // Renamed request to _request to avoid ESLint warning
   const connectionString = process.env.SUPABASE_DB_CONNECTION;
 
   if (!connectionString) {
@@ -10,7 +9,7 @@ export async function POST(request: Request) {
   }
 
   const client = new Client({ connectionString });
-  
+
   try {
     await client.connect();
 
@@ -46,8 +45,9 @@ export async function POST(request: Request) {
 
     await client.end();
     return NextResponse.json({ message: 'Tables created (or already exist).' });
-  } catch (error: any) {
+  } catch (error: unknown) { // Changed 'any' to 'unknown'
     console.error('Error setting up tables:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

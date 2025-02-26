@@ -17,7 +17,7 @@ export default function CustomLoader() {
       });
     }, 500);
     return () => clearInterval(interval);
-  }, []);
+  }, []);  // No need to include 'letters' here, as it doesn't change
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-40">

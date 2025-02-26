@@ -4,14 +4,26 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FaPaperPlane, FaImage, FaTimes } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image'; // Import Image from next/image
 
 interface ChatWidgetProps {
   closeChat?: () => void;
 }
 
+interface Message {
+  id: number;
+  user_id: number;
+  admin_id: number;
+  sender_role: 'user' | 'admin';
+  message: string;
+  image_url: string | null;
+  created_at: string;
+  is_read: boolean;
+}
+
 export default function ChatWidget({ closeChat }: ChatWidgetProps) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
@@ -75,9 +87,9 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       supabase.removeChannel(channel);
       clearInterval(readReceiptInterval);
     };
-  }, [user]);
+  }, [user, markUnreadAdminMessagesAsRead]); // Added markUnreadAdminMessagesAsRead to the dependencies
 
-  const markUnreadAdminMessagesAsRead = async (data: any[]) => {
+  const markUnreadAdminMessagesAsRead = async (data: Message[]) => {
     const unreadMessages = data.filter(
       (msg) => msg.user_id === adminId && !msg.is_read
     );
@@ -173,10 +185,12 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
                   }`}
                 >
                   {msg.image_url ? (
-                    <img
+                    <Image
                       src={supabase.storage.from('chat-images').getPublicUrl(msg.image_url).publicURL}
                       alt="sent image"
                       className="max-h-40 rounded"
+                      width={160} // Image optimization requires width and height
+                      height={160} // Image optimization requires width and height
                     />
                   ) : (
                     msg.message

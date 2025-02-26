@@ -30,8 +30,15 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ message: 'A new OTP has been sent successfully.' });
-  } catch (err: any) {
+  } catch (err: unknown) {  // Use 'unknown' instead of 'any'
     console.error('Resend OTP error:', err);
+    
+    if (err instanceof Error) {
+      // If the error is an instance of Error, you can access error.message
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+
+    // Fallback if the error is not an instance of Error
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

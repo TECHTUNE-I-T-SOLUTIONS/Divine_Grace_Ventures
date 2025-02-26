@@ -58,11 +58,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const handleSubmitFeedback = async () => {
     if (loading || !user) {
       setAlertMessage('You must be logged in to submit feedback.');
+      setAlertType('error');
       return;
     }
 
     if (feedbackMessage.trim() === '') {
       setAlertMessage('Please provide feedback before submitting.');
+      setAlertType('error');
       return;
     }
 
@@ -87,10 +89,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       }
 
       setAlertMessage('Feedback submitted successfully!');
+      setAlertType('success');
       setFeedbackMessage('');
       setFeedbackOpen(false); // Close feedback modal
     } catch (error) {
       setAlertMessage('Error submitting feedback: ' + error.message);
+      setAlertType('error');
     } finally {
       setIsLoading(false); // Stop loading
     }

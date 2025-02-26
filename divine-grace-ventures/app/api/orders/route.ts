@@ -1,6 +1,13 @@
-// app/api/orders/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity?: number;
+  user_quantity?: number;
+}
 
 export async function POST(request: Request) {
   try {
@@ -18,8 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Calculate total amount from cart items (using user_quantity if available)
-    const total = cart.reduce((acc: number, item: any) => {
+    // Calculate total amount from cart items
+    const total = cart.reduce((acc: number, item: CartItem) => {
       const qty = item.user_quantity || item.quantity || 0;
       return acc + (item.price * qty);
     }, 0);
@@ -89,8 +96,11 @@ export async function POST(request: Request) {
       order: orderData,
       payment: paymentData
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {  // Changed `any` to `unknown`
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -98,10 +108,11 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
+
     // For admin view, when no user_id is provided, return all orders with payment details
     let query = supabase
       .from('orders')
-      .select(`*, payments:payments(*)`)  // join the payments table to include all payment details
+      .select(`*, payments:payments(*)`)  // join the payments table
       .order('created_at', { ascending: false });
 
     if (user_id) {
@@ -113,8 +124,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ orders: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) { // Changed `any` to `unknown`
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
 
@@ -124,16 +138,22 @@ export async function PUT(request: Request) {
     if (!id || !status) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
     const { data, error } = await supabase
       .from('orders')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
       .single();
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
     return NextResponse.json({ message: 'Order status updated successfully', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {  // Changed `any` to `unknown`
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

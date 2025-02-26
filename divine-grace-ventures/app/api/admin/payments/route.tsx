@@ -26,7 +26,13 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ payments: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    // Safely narrow the error type
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    } else {
+      // In case the error is not an instance of Error
+      return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
+    }
   }
 }

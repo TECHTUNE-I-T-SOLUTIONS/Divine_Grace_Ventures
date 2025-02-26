@@ -5,9 +5,17 @@ import { createBrowserSupabaseClient } from '@supabase/auth-helpers-nextjs';
 import AdminChatPanel from '@/components/AdminChatPanel';
 import { FaUsers, FaBars } from 'react-icons/fa';
 
+// Define types for the users
+interface User {
+  id: string;
+  username: string | null;
+  email: string;
+  is_online: boolean;
+}
+
 const AdminChatPage = () => {
   const [supabase] = useState(() => createBrowserSupabaseClient());
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]); // Use User[] instead of any[]
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -18,9 +26,11 @@ const AdminChatPage = () => {
       try {
         const res = await fetch('/api/users');
         const json = await res.json();
-        setUsers(json.users || []);
-      } catch (err: any) {
-        console.error('Error fetching users:', err.message);
+        setUsers(json.users || []); // Ensure the data matches the User[] type
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Error fetching users:', err.message); // Narrow down to error handling
+        }
       }
     }
     fetchUsers();
@@ -38,7 +48,7 @@ const AdminChatPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const renderChatItem = (user: any) => {
+  const renderChatItem = (user: User) => {
     const isActive = selectedUser === user.id;
     return (
       <button

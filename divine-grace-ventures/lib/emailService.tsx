@@ -48,8 +48,12 @@ export async function sendOtpEmail(email: string, otp: string) {
     console.log(`Email sent: ${info.response}`);
 
     return { success: true };
-  } catch (error: any) {
-    console.error('Email OTP error:', error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Email OTP error:', error.message);
+    } else {
+      console.error('Unknown error occurred while sending OTP');
+    }
+    return { success: false, error: (error as Error).message };
   }
 }

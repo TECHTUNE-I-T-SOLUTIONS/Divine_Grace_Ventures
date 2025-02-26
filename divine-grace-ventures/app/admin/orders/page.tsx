@@ -5,9 +5,9 @@ import OrderCard, { Order } from '@/components/OrderCard';
 import CustomLoader from '@/components/CustomLoader';
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [orders, setOrders] = useState<Order[]>([]); // Use the Order type for the orders
+  const [loading, setLoading] = useState<boolean>(true); // Specify the type of loading as boolean
+  const [error, setError] = useState<string>(''); // Set error type as string
 
   useEffect(() => {
     async function fetchOrders() {
@@ -17,8 +17,13 @@ export default function AdminOrdersPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch orders');
         setOrders(data.orders);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        // Narrow down the error to be of type Error before accessing message
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }

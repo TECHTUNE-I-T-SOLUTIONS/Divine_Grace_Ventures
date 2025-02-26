@@ -1,16 +1,15 @@
-// app/api/setup/products/route.ts
 import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) { // Renamed request to _request to avoid the ESLint warning
   const connectionString = process.env.SUPABASE_DB_CONNECTION;
-  
+
   if (!connectionString) {
     return NextResponse.json({ error: 'Database connection string not set.' }, { status: 500 });
   }
-  
+
   const client = new Client({ connectionString });
-  
+
   try {
     await client.connect();
 
@@ -33,8 +32,9 @@ export async function POST(request: Request) {
 
     await client.end();
     return NextResponse.json({ message: 'Products table created or already exists.' });
-  } catch (error: any) {
+  } catch (error: unknown) { // Changed 'any' to 'unknown'
     await client.end();
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

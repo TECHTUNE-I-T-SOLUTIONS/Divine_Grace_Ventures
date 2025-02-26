@@ -1,4 +1,3 @@
-// app/dashboard/notifications/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,9 +5,14 @@ import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 import NotificationCard from '@/components/NotificationCard';
 
+interface Notification {
+  id: string;
+  message: string;
+  // Add other fields as per your notification structure
+}
+
 export default function NotificationsPage() {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -19,8 +23,12 @@ export default function NotificationsPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
         setNotifications(data.notifications);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
       } finally {
         setLoading(false);
       }

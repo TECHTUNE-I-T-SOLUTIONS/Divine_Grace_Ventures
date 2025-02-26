@@ -1,14 +1,19 @@
-// app/admin/notifications/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
 import NotificationCard from '@/components/NotificationCard';
 
+// Define the type for a notification
+interface Notification {
+  id: string;
+  message: string;  // You can expand this based on the actual structure of your notifications
+}
+
 export default function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [notifications, setNotifications] = useState<Notification[]>([]); // Use the defined Notification type
+  const [loading, setLoading] = useState<boolean>(true); // Specify the type of loading
+  const [error, setError] = useState<string>(''); // Set error type as string
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -17,8 +22,13 @@ export default function AdminNotificationsPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
         setNotifications(data.notifications);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        // Narrow down the error to be of type Error before accessing message
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }

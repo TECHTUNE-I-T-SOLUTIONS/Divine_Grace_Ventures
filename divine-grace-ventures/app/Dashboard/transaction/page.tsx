@@ -5,22 +5,34 @@ import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 import PaymentCard from '@/components/PaymentCard';
 
+type Transaction = {
+  id: string;
+  amount: number;
+  date: string;
+  status: string;
+  description: string;
+};
+
 export default function TransactionsPage() {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        if (!user) throw new Error("User not authenticated");
+        if (!user) throw new Error('User not authenticated');
         const res = await fetch(`/api/admin/payments?user_id=${user.id}`, { credentials: 'include' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch transactions');
         setTransactions(data.payments);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }

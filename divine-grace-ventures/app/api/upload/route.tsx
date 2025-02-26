@@ -1,4 +1,3 @@
-// app/api/upload/route.ts
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
     const filePath = `products/${fileName}`;
 
     // Upload file to bucket "images"
-    const { data, error } = await supabase.storage.from('images').upload(filePath, file);
+    const { error } = await supabase.storage.from('images').upload(filePath, file);
     if (error) {
       console.error("Upload error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -31,7 +30,7 @@ export async function POST(request: Request) {
     // we return the file path.
     if (productId) {
       const numericId = Number(productId);
-      const { data: updateData, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('products')
         .update({ image: filePath })
         .eq('id', numericId);
@@ -43,7 +42,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ filePath });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) { // Changed 'any' to 'unknown'
+    console.error('Error uploading file:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

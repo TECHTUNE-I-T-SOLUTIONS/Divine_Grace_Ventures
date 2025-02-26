@@ -58,7 +58,7 @@ export default function AuthPage() {
         setLoading(false);
         router.push('/Dashboard');
       }, 2000);
-    } catch (error: any) {
+    } catch (error: Error) {
       setAlert({ type: 'error', message: error.message || 'Login error' });
       setLoading(false);
     }
@@ -360,7 +360,7 @@ export default function AuthPage() {
       </form>
       {/* Resend OTP button */}
       <p className="text-white">
-        Didn't receive an OTP?{' '}
+        Didn&apos;t receive an OTP?{' '}
         <button
           onClick={handleResendOtp}
           className="text-white py-2 rounded hover:bg-purple-600 mt-4"
@@ -402,24 +402,26 @@ export default function AuthPage() {
             Login
           </button>
         </p>
+        <p className="mt-2 text-white">
+          Don't have an account?{' '}
+          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline"
+          title="Sign Up">
+            Sign Up
+          </button>
+        </p>
       </div>
     </div>
   );
-
+  
   return (
-    <>
-      {loading && <CustomLoader />}
-      {/* Background overlay with a low z-index */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-20" onClick={handleOverlayClick} />
-      {/* Modal dialog with a higher z-index */}
-      <div className="fixed inset-0 flex items-center justify-center z-30" onClick={stopPropagation}>
-        <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md" onClick={stopPropagation}>
-          {activeView === 'login' && renderLogin()}
-          {activeView === 'signup' && renderSignup()}
-          {activeView === 'forgot' && renderForgot()}
-          {activeView === 'otp' && renderOtp()}
-        </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-800 bg-opacity-90">
+      <div className="bg-gray-900 p-8 rounded-lg w-full max-w-md relative">
+        {activeView === 'login' && renderLogin()}
+        {activeView === 'signup' && renderSignup()}
+        {activeView === 'otp' && renderOtp()}
+        {activeView === 'forgot' && renderForgot()}
+        {loading && <CustomLoader />}
       </div>
-    </>
+    </div>
   );
 }

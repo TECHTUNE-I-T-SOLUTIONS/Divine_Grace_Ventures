@@ -1,4 +1,3 @@
-// app/api/proxy-image/route.ts
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -13,16 +12,20 @@ export async function GET(request: Request) {
     if (!filePath) {
       return NextResponse.json({ error: 'Missing filePath parameter' }, { status: 400 });
     }
+
     // Create a signed URL valid for 1 hour (3600 seconds)
     const { data, error } = await supabase.storage
       .from('images')
       .createSignedUrl(filePath, 3600);
+
     if (error || !data?.signedUrl) {
       return NextResponse.json({ error: error?.message || 'Could not create signed URL' }, { status: 500 });
     }
-    // Instead of returning JSON, redirect to the signed URL so the image is served.
+
+    // Redirect to the signed URL so the image is served.
     return NextResponse.redirect(data.signedUrl);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

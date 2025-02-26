@@ -3,15 +3,18 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import nodemailer from 'nodemailer';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const { data, error } = await supabase.from('products').select('*');
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ products: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 }
 
@@ -74,21 +77,25 @@ export async function POST(request: Request) {
       </div>
     `;
 
-    return NextResponse.json({ message: 'Product added successfully, notifications will be sent soon.', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-
-  (async () => {
-    for (const user of users) {
-      await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to: user.email,
-        subject: `New Product Available: ${name}`,
-        html: emailHTML,
-      }).catch(err => console.error('Email Send Error:', err));
+    // Sending emails to all users
+    if (users && Array.isArray(users)) {
+      await Promise.all(users.map(async (user) => {
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM,
+          to: user.email,
+          subject: `New Product Available: ${name}`,
+          html: emailHTML,
+        }).catch(err => console.error('Email Send Error:', err));
+      }));
     }
-  })();  
+
+    return NextResponse.json({ message: 'Product added successfully, notifications will be sent soon.', data });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
@@ -98,8 +105,11 @@ export async function PUT(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (!data) return NextResponse.json({ error: 'No product returned after update' }, { status: 500 });
     return NextResponse.json({ message: 'Product updated successfully', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 }
 
@@ -109,7 +119,10 @@ export async function DELETE(request: Request) {
     const { data, error } = await supabase.from('products').delete().eq('id', id).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ message: 'Product deleted successfully', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 }

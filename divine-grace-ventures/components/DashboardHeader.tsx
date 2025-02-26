@@ -7,12 +7,17 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import useSound from 'use-sound';
 import { createClient } from '@supabase/supabase-js';
+import Image from 'next/image'; // Import Image from next/image
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 interface DashboardHeaderProps {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+}
+
+interface CartItem {
+  quantity: number;
 }
 
 export default function DashboardHeader({ sidebarOpen, toggleSidebar }: DashboardHeaderProps) {
@@ -32,7 +37,7 @@ export default function DashboardHeader({ sidebarOpen, toggleSidebar }: Dashboar
         const res = await fetch(`/api/cart?user_id=${user.id}`);
         const data = await res.json();
         if (res.ok && data.cart) {
-          const total = data.cart.reduce((acc: number, item: any) => acc + (item.quantity || 0), 0);
+          const total = data.cart.reduce((acc: number, item: CartItem) => acc + (item.quantity || 0), 0);
           setCartCount(total);
         }
       }
@@ -101,7 +106,7 @@ export default function DashboardHeader({ sidebarOpen, toggleSidebar }: Dashboar
           <button onClick={toggleSidebar} className="mr-0 text-white md:hidden" title="Sidebar">
             {sidebarOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
           </button>
-          <img src="/images/logo.png" alt="Logo" className="h-8 w-8 m-2 rounded-sm" />
+          <Image src="/images/logo.png" alt="Logo" className="h-8 w-8 m-2 rounded-sm" width={32} height={32} />
           <h1 className="text-xl font-bold" title="Divine Grace Ventures">Divine Grace Ventures</h1>
         </div>
         <div className="flex items-center space-x-2">

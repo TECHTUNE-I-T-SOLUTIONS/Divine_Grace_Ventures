@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FaHome, FaInfoCircle, FaUserShield, FaUser, FaBars } from 'react-icons/fa';
+import Image from 'next/image'; // Import Image from next/image
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,7 +13,13 @@ export default function Header() {
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo and Brand */}
         <div className="flex items-center space-x-2">
-          <img src="/images/logo.png" alt="Divine Grace Ventures Logo" className="h-10 w-10 rounded-sm" />
+          <Image 
+            src="/images/logo.png" 
+            alt="Divine Grace Ventures Logo" 
+            width={40} 
+            height={40} 
+            className="rounded-sm" 
+          />
           <span className="text-xl text-white font-bold">Divine Grace Ventures</span>
         </div>
         {/* Desktop Navigation */}

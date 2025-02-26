@@ -1,7 +1,12 @@
-// app/api/profile/route.ts
 import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+
+interface ProfileUpdatePayload {
+  full_name?: string;
+  phone?: string;
+  address?: string;
+}
 
 export async function GET() {
   const supabase = createRouteHandlerClient({ cookies });
@@ -9,7 +14,6 @@ export async function GET() {
   if (error || !session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  // Return the authenticated user's details (you may merge these with additional fields from your custom "users" table if needed)
   return NextResponse.json({ user: session.user });
 }
 
@@ -19,18 +23,23 @@ export async function PUT(request: Request) {
   if (sessionError || !session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
   const userId = session.user.id;
   const { full_name, phone, address, password } = await request.json();
-  const payload: any = { full_name, phone, address };
 
-  // If a new password is provided, update the auth user.
+  const payload: ProfileUpdatePayload = {}; // Use the defined interface
+
+  if (full_name) payload.full_name = full_name;
+  if (phone) payload.phone = phone;
+  if (address) payload.address = address;
+
   if (password) {
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
   }
-  // Update additional profile details in your custom "users" table.
+
   const { data, error } = await supabase.from('users').update(payload).eq('id', userId).single();
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

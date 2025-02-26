@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-export async function GET(req) {
+export async function GET() { // Removed 'req' since it's not used
   // Use the server-side Supabase client (with proper authentication/service role)
   const supabase = createPagesServerClient({ cookies });
   const { data, error } = await supabase
