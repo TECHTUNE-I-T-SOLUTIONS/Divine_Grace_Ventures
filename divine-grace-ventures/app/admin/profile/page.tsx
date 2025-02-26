@@ -5,15 +5,23 @@ import CustomLoader from '@/components/CustomLoader';
 import { FaUser, FaEnvelope, FaPhone, FaLock, FaSave } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 
+// Define a type for the profile data
+interface Profile {
+  email: string;
+  full_name: string;
+  phone: string;
+  // Add other fields as needed
+}
+
 export default function AdminProfilePage() {
   const { user, setUser } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
+  const [profile, setProfile] = useState<Profile | null>(null); // Specify the type as Profile or null
+  const [loading, setLoading] = useState<boolean>(true); // Specify the type as boolean
+  const [fullName, setFullName] = useState<string>(''); // Specify the type as string
+  const [phone, setPhone] = useState<string>(''); // Specify the type as string
+  const [password, setPassword] = useState<string>(''); // Specify the type as string
+  const [confirmPassword, setConfirmPassword] = useState<string>(''); // Specify the type as string
+  const [alertMessage, setAlertMessage] = useState<string>(''); // Specify the type as string
 
   useEffect(() => {
     async function loadProfile() {
@@ -27,8 +35,12 @@ export default function AdminProfilePage() {
         } else {
           setAlertMessage(data.error || 'Failed to load profile');
         }
-      } catch (err: any) {
-        setAlertMessage(err.message);
+      } catch (err) {
+        if (err instanceof Error) {
+          setAlertMessage(err.message); // Ensure we are dealing with an instance of Error
+        } else {
+          setAlertMessage('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }
@@ -44,7 +56,7 @@ export default function AdminProfilePage() {
       setLoading(false);
       return;
     }
-    const payload: any = { full_name: fullName, phone };
+    const payload: { full_name: string; phone: string; password?: string } = { full_name: fullName, phone };
     if (password) payload.password = password;
     try {
       const res = await fetch('/api/admin/profile', {
@@ -60,8 +72,12 @@ export default function AdminProfilePage() {
         // Update the AuthContext with new details
         setUser({ ...user, full_name: fullName, phone });
       }
-    } catch (err: any) {
-      setAlertMessage(err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setAlertMessage(err.message); // Handle the error properly
+      } else {
+        setAlertMessage('An unknown error occurred');
+      }
     }
     setLoading(false);
   };

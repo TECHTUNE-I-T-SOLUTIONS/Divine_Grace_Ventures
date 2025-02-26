@@ -19,7 +19,7 @@ interface EditOrderModalProps {
 export default function EditOrderModal({ order, onClose, onUpdate }: EditOrderModalProps) {
   const [deliveryDate, setDeliveryDate] = useState(order.delivery_date);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +39,12 @@ export default function EditOrderModal({ order, onClose, onUpdate }: EditOrderMo
       onUpdate(data.data);
       setLoading(false);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Error updating order');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Error updating order');
+      } else {
+        setError('Error updating order');
+      }
       setLoading(false);
     }
   };

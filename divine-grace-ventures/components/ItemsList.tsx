@@ -1,8 +1,9 @@
-// components/ItemsList.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image'; // Import Image from next/image
 
 interface Item {
   id: number;
@@ -82,21 +83,29 @@ export default function ItemsList() {
           className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl"
         >
           <div className="bg-transparent rounded-lg p-4 shadow-lg">
-            <img
-              src={firstItem.image}
-              alt={firstItem.name}
-              className="w-full h-64 object-cover rounded-md"
-            />
+            <Link href="/user">
+              <Image
+                src={firstItem.image}
+                alt={firstItem.name}
+                width={500}
+                height={300}
+                className="w-full h-64 object-cover rounded-md"
+              />
+            </Link>
             <h3 className="text-xl font-bold mt-2 text-white text-center">
               {firstItem.name}
             </h3>
           </div>
           <div className="bg-transparent rounded-lg p-4 shadow-lg">
-            <img
-              src={secondItem.image}
-              alt={secondItem.name}
-              className="w-full h-64 object-cover rounded-md"
-            />
+            <Link href="/user">
+              <Image
+                src={secondItem.image}
+                alt={secondItem.name}
+                width={500}
+                height={300}
+                className="w-full h-64 object-cover rounded-md"
+              />
+            </Link>
             <h3 className="text-xl font-bold mt-2 text-white text-center">
               {secondItem.name}
             </h3>

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Product } from './ProductCard';
 import { FaTimes } from 'react-icons/fa';
 import CustomLoader from './CustomLoader';
+import Image from 'next/image'; // Import the Image component from next/image
 
 interface EditProductModalProps {
   product: Product;
@@ -20,11 +21,11 @@ export default function EditProductModal({ product, onClose, onUpdate }: EditPro
   const [image, setImage] = useState(product.image || "");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
 
-useEffect(() => {
-
-},);
+  useEffect(() => {
+    // Placeholder for potential future use of useEffect
+  }, []);
 
   const imageSrc =
     product.image && !product.image.startsWith('http')
@@ -47,8 +48,12 @@ useEffect(() => {
       } else {
         setImage(data.publicURL);
       }
-    } catch (err: any) {
-      setError(err.message || "Image upload error");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Image upload error");
+      } else {
+        setError("Image upload error");
+      }
     } finally {
       setUploading(false);
     }
@@ -84,8 +89,12 @@ useEffect(() => {
       }
       setLoading(false);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Error updating product");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Error updating product");
+      } else {
+        setError("Error updating product");
+      }
       setLoading(false);
     }
   };
@@ -146,7 +155,13 @@ useEffect(() => {
               <label className="block text-gray-700">Image</label>
               {image && (
                 <div className="mb-2">
-                  <img src={imageSrc} alt="Product" className="w-full h-32 object-cover rounded" />
+                  <Image
+                    src={imageSrc}
+                    alt="Product"
+                    width={400}
+                    height={200}
+                    className="w-full h-32 object-cover rounded"
+                  />
                 </div>
               )}
               <input

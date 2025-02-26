@@ -1,4 +1,3 @@
-// app/api/auth/forgot/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabaseClient';
@@ -68,7 +67,7 @@ export async function POST(request: Request) {
   // Send the email
   try {
     await transporter.sendMail(mailOptions);
-  } catch (mailError: any) {
+  } catch (mailError: Error) {  // Use 'Error' type instead of 'any'
     return NextResponse.json({ error: mailError.message }, { status: 500 });
   }
 

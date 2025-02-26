@@ -1,4 +1,3 @@
-// app/dashboard/cart/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,16 +5,35 @@ import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/PaymentModal';
 
+interface CartItem {
+  id: number;
+  price: number;
+  user_quantity: number;
+  note?: string;
+  unit: string;
+  products: {
+    image: string;
+    name: string;
+  };
+}
+
+interface DeliveryInfo {
+  address: string;
+  phone: string;
+  payer_name: string;
+  note?: string;
+}
+
 export default function CartPage() {
   const { user } = useAuth();
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [editItem, setEditItem] = useState<any>(null);
-  const [updatedQuantity, setUpdatedQuantity] = useState(0);
-  const [updatedNote, setUpdatedNote] = useState('');
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [editItem, setEditItem] = useState<CartItem | null>(null);
+  const [updatedQuantity, setUpdatedQuantity] = useState<number>(0);
+  const [updatedNote, setUpdatedNote] = useState<string>('');
 
   useEffect(() => {
     async function fetchCart() {
@@ -25,7 +43,7 @@ export default function CartPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch cart');
         // For each cart item, if the product image exists and is not a full URL, use the proxy endpoint.
-        const updatedCart = data.cart.map((item: any) => {
+        const updatedCart = data.cart.map((item: CartItem) => {
           if (item.products && item.products.image && !item.products.image.startsWith('http')) {
             return {
               ...item,
@@ -40,7 +58,7 @@ export default function CartPage() {
         setCartItems(updatedCart);
         // Calculate total amount using user_quantity instead of quantity
         const total = updatedCart.reduce(
-          (acc: number, item: any) => acc + (item.price * (item.user_quantity || 0)),
+          (acc: number, item: CartItem) => acc + (item.price * (item.user_quantity || 0)),
           0
         );
         setTotalAmount(total);
@@ -67,14 +85,14 @@ export default function CartPage() {
       // Recalculate total amount after removal
       const newTotal = cartItems
         .filter(item => item.id !== id)
-        .reduce((acc: number, item: any) => acc + (item.price * (item.user_quantity || 0)), 0);
+        .reduce((acc: number, item: CartItem) => acc + (item.price * (item.user_quantity || 0)), 0);
       setTotalAmount(newTotal);
     } catch (error: any) {
       console.error('Remove cart error:', error.message);
     }
   };
 
-  const handleEditItem = (item: any) => {
+  const handleEditItem = (item: CartItem) => {
     setEditItem(item);
     setUpdatedQuantity(item.user_quantity);
     setUpdatedNote(item.note || '');
@@ -86,19 +104,19 @@ export default function CartPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ id: editItem.id, user_quantity: updatedQuantity, note: updatedNote }),
+        body: JSON.stringify({ id: editItem?.id, user_quantity: updatedQuantity, note: updatedNote }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to update item');
       setCartItems(
         cartItems.map(item =>
-          item.id === editItem.id ? { ...item, user_quantity: updatedQuantity, note: updatedNote } : item
+          item.id === editItem?.id ? { ...item, user_quantity: updatedQuantity, note: updatedNote } : item
         )
       );
       // Recalculate total amount after edit
       const newTotal = cartItems.reduce(
-        (acc: number, item: any) =>
-          item.id === editItem.id
+        (acc: number, item: CartItem) =>
+          item.id === editItem?.id
             ? acc + (item.price * updatedQuantity)
             : acc + (item.price * (item.user_quantity || 0)),
         0
@@ -110,7 +128,7 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckoutSuccess = async (reference: string, deliveryInfo: { address: string; phone: string; payer_name: string; note?: string }) => {
+  const handleCheckoutSuccess = async (reference: string, deliveryInfo: DeliveryInfo) => {
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -150,7 +168,7 @@ export default function CartPage() {
         <p className="text-white">Your cart is empty.</p>
       ) : (
         <ul className="space-y-4">
-          {cartItems.map((item: any) => (
+          {cartItems.map((item: CartItem) => (
             <li key={item.id} className="flex items-center justify-between p-4 bg-white rounded shadow">
               <img src={item.products.image} alt={item.products.name} className="w-16 h-16 object-cover rounded" />
               <div className="flex-grow ml-4">

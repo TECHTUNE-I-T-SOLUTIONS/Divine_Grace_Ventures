@@ -1,10 +1,16 @@
-// app/dashboard/orders/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
 import OrderCard, { Order } from '@/components/OrderCard';
 import { useAuth } from '@/context/AuthContext';
+
+interface OrderItem {
+  products: {
+    name: string;
+  };
+  // Define other fields if necessary
+}
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -22,8 +28,12 @@ export default function OrdersPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch orders');
         setOrders(data.orders);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unexpected error occurred');
+        }
       } finally {
         setLoading(false);
       }
@@ -33,7 +43,7 @@ export default function OrdersPage() {
 
   // Filter orders by search (search within order items' names)
   const filteredOrders = orders.filter((order) =>
-    order.order_items.some((item: any) =>
+    order.order_items.some((item: OrderItem) =>
       (item.products.name || '').toLowerCase().includes(search.toLowerCase())
     )
   );

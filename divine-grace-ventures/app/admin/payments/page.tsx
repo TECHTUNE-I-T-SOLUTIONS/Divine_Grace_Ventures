@@ -1,14 +1,22 @@
-// app/admin/payments/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
 import PaymentCard from '@/components/PaymentCard';
 
+// Define a type for the payment object
+interface Payment {
+  id: string;
+  amount: number;
+  date: string;
+  status: string;
+  // Add other fields as per your API response
+}
+
 export default function AdminPaymentsPage() {
-  const [payments, setPayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [payments, setPayments] = useState<Payment[]>([]); // Specify the type as Payment[]
+  const [loading, setLoading] = useState<boolean>(true); // Specify the type as boolean
+  const [error, setError] = useState<string>(''); // Specify the type as string
 
   useEffect(() => {
     async function fetchPayments() {
@@ -17,8 +25,12 @@ export default function AdminPaymentsPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch payments');
         setPayments(data.payments);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message); // Ensure we are dealing with an instance of Error
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }

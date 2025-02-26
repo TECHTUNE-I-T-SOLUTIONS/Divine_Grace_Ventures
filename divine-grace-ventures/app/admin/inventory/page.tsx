@@ -1,4 +1,3 @@
-// app/admin/inventory/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,8 +18,12 @@ export default function AdminInventoryPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch products');
         setProducts(data.products);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
       } finally {
         setLoading(false);
       }

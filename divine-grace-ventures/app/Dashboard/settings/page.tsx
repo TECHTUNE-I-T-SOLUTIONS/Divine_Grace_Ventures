@@ -5,6 +5,12 @@ import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 
+interface SettingsResponse {
+  email_notifications: boolean;
+  sms_notifications: boolean;
+  dark_mode: boolean;
+}
+
 export default function DashboardSettings() {
   const { user } = useAuth();
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -25,7 +31,7 @@ export default function DashboardSettings() {
             'x-user-id': user.id
           }
         });
-        const data = await res.json();
+        const data: SettingsResponse = await res.json();
         if (res.ok) {
           setEmailNotifications(data.email_notifications);
           setSmsNotifications(data.sms_notifications);

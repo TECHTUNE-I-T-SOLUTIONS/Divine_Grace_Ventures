@@ -1,16 +1,24 @@
 // app/dashboard/profile/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 import { FaUser, FaEnvelope, FaPhone, FaHome, FaLock, FaSave } from 'react-icons/fa';
+
+// Define types for the profile data
+interface Payload {
+  full_name: string;
+  phone: string;
+  address: string;
+  password?: string;
+}
 
 export default function ProfilePage() {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState(user?.full_name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [email] = useState(user?.email || ''); // email is not editable
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
   const [password, setPassword] = useState('');
@@ -26,7 +34,7 @@ export default function ProfilePage() {
       return;
     }
 
-    const payload: any = { full_name: fullName, phone, address };
+    const payload: Payload = { full_name: fullName, phone, address };
     if (password) payload.password = password;
 
     try {
@@ -43,7 +51,7 @@ export default function ProfilePage() {
         // Update auth context with new details.
         setUser({ ...user, full_name: fullName, phone, address });
       }
-    } catch (err: any) {
+    } catch (err: Error) {
       setAlertMessage(err.message);
     }
     setLoading(false);

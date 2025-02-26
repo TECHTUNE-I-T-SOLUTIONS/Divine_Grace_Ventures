@@ -3,14 +3,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaUserShield } from 'react-icons/fa';
 import CustomLoader from '@/components/CustomLoader';
 import CustomAlert from '@/components/CustomAlert';
+
+interface Alert {
+  type: 'error' | 'success' | 'info';
+  message: string;
+}
 
 function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'forgot') => void; setLoading: (value: boolean) => void; }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
+  const [alert, setAlert] = useState<Alert | null>(null);
   const router = useRouter();
 
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -34,8 +38,8 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
         setLoading(false);
         router.push('/admin'); // Redirect to admin dashboard
       }, 2000);
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Login error' });
+    } catch (error: unknown) {
+      setAlert({ type: 'error', message: (error as Error).message || 'Login error' });
       setLoading(false);
     }
   };
@@ -84,7 +88,7 @@ function AdminLoginForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'fo
 
 function AdminForgotPasswordForm({ onSwitchView, setLoading }: { onSwitchView: (view: 'login') => void; setLoading: (value: boolean) => void; }) {
   const [email, setEmail] = useState('');
-  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
+  const [alert, setAlert] = useState<Alert | null>(null);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,8 +108,8 @@ function AdminForgotPasswordForm({ onSwitchView, setLoading }: { onSwitchView: (
       }
       setAlert({ type: 'success', message: 'Reset instructions sent to your email.' });
       setLoading(false);
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Error resetting password.' });
+    } catch (error: unknown) {
+      setAlert({ type: 'error', message: (error as Error).message || 'Error resetting password.' });
       setLoading(false);
     }
   };

@@ -7,13 +7,23 @@ import { useAuth } from '@/context/AuthContext';
 
 interface AdminChatPanelProps {
   selectedUser: string; // User's UUID
-  supabase: any;
+  supabase: any; // Replace with correct Supabase client type if available
   onClose: () => void;
+}
+
+interface Message {
+  id: string;
+  admin_id: string;
+  user_id: string;
+  sender_role: 'admin' | 'user';
+  message: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export default function AdminChatPanel({ selectedUser, supabase, onClose }: AdminChatPanelProps) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]); // Replaced any[] with Message[] type
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -63,7 +73,7 @@ export default function AdminChatPanel({ selectedUser, supabase, onClose }: Admi
           event: 'INSERT',
           schema: 'public',
           table: 'chats',
-          filter: `admin_id.eq.${adminId} and user_id.eq.${selectedUser}`
+          filter: `admin_id=eq.${adminId} and user_id=eq.${selectedUser}`,
         },
         (payload) => {
           setMessages((prev) => [...prev, payload.new]);
@@ -101,7 +111,7 @@ export default function AdminChatPanel({ selectedUser, supabase, onClose }: Admi
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onClose, sendMessage]); // Added dependencies to ensure the effect is properly triggered when these change
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;

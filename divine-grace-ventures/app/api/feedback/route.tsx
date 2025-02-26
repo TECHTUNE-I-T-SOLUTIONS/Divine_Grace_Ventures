@@ -26,7 +26,7 @@ export async function POST(req) {
   return NextResponse.json({ success: true, data });
 }
 
-export async function GET(req) {
+export async function GET() { // Removed 'req'
   const supabase = createPagesServerClient({ cookies });
 
   // Fetch all feedback messages from the 'feedback' table

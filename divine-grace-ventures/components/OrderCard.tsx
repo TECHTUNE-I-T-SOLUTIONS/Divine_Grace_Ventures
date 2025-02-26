@@ -1,7 +1,7 @@
-// components/OrderCard.tsx
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 export interface OrderItem {
   product_id: number;
@@ -55,8 +55,12 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
       if (!res.ok) throw new Error(data.error || 'Failed to update order status');
       setStatus(newStatus);
       if (onStatusUpdate) onStatusUpdate(order.id, newStatus);
-    } catch (error: any) {
-      console.error('Status update error:', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Status update error:', error.message);
+      } else {
+        console.error('Unknown error during status update');
+      }
     }
   };
 
@@ -84,10 +88,12 @@ export default function OrderCard({ order, onStatusUpdate }: OrderCardProps) {
             return (
               <div key={item.product_id} className="flex items-center space-x-2">
                 {itemImageSrc && (
-                  <img
+                  <Image
                     src={itemImageSrc}
                     alt={item.name}
-                    className="w-12 h-12 object-cover rounded"
+                    width={48} // Adjust the width and height as needed
+                    height={48} // Adjust the width and height as needed
+                    className="object-cover rounded"
                   />
                 )}
                 <div>

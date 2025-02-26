@@ -6,6 +6,7 @@ import { FaTimes } from 'react-icons/fa';
 import { Product } from './ProductCard';
 import CustomAlert from '@/components/CustomAlert';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image'; // Import Image component from Next.js for optimization
 
 interface AddToCartModalProps {
   product: Product;
@@ -47,7 +48,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
           }),
         });
         setAlert({ type: 'success', message: 'Item added to cart. A notification has been sent to your email.' });
-      } catch (error: any) {
+      } catch (error: unknown) {
         setAlert({ type: 'error', message: 'Item added to cart but failed to send notification.' });
       }
     } else {
@@ -75,10 +76,12 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
         </div>
         {imageSrc && (
           <div className="my-4 flex justify-center">
-            <img
+            <Image
               src={imageSrc}
               alt={product.name}
-              className="h-24 w-24 object-cover rounded"
+              width={96} // Set width and height for proper optimization
+              height={96}
+              className="object-cover rounded"
             />
           </div>
         )}

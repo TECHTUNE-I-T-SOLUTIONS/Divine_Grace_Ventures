@@ -1,8 +1,6 @@
-// app/admin/CreateAlert/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { FaTrash, FaEdit, FaSave, FaPlus } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { createClient } from '@supabase/supabase-js';
@@ -12,7 +10,6 @@ import CustomAlert from '@/components/CustomAlert';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 export default function CreateAlert() {
-  const router = useRouter();
   const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -47,9 +44,7 @@ export default function CreateAlert() {
         return;
       }
       const adminId = user?.id;
-      const { error } = await supabase.from('alerts').insert([
-        { message: newMessage, admin_id: adminId }
-      ]);
+      const { error } = await supabase.from('alerts').insert([ { message: newMessage, admin_id: adminId } ]);
       if (error) throw error;
       setNewMessage('');
       setAlertMessage({ type: 'success', message: 'Alert created successfully' });
@@ -105,8 +100,7 @@ export default function CreateAlert() {
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
-        <button onClick={createAlert} className="bg-blue-500 text-white px-4 py-2 rounded"
-        title="Create Alert">
+        <button onClick={createAlert} className="bg-blue-500 text-white px-4 py-2 rounded" title="Create Alert">
           <FaPlus />
         </button>
       </div>
@@ -129,13 +123,11 @@ export default function CreateAlert() {
                   <FaSave />
                 </button>
               ) : (
-                <button onClick={() => { setEditingId(alert.id); setEditingMessage(alert.message); }} className="text-blue-600"
-                title="Edit the Alert">
+                <button onClick={() => { setEditingId(alert.id); setEditingMessage(alert.message); }} className="text-blue-600" title="Edit the Alert">
                   <FaEdit />
                 </button>
               )}
-              <button onClick={() => deleteAlert(alert.id)} className="text-red-600"
-              title="Delete the Alert">
+              <button onClick={() => deleteAlert(alert.id)} className="text-red-600" title="Delete the Alert">
                 <FaTrash />
               </button>
             </div>
