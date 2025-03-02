@@ -39,8 +39,12 @@ export default function DashboardSettings() {
         } else {
           setAlert({ type: 'error', message: data.error || 'Failed to load settings.' });
         }
-      } catch (err: any) {
-        setAlert({ type: 'error', message: err.message || 'Error loading settings.' });
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setAlert({ type: 'error', message: err.message });
+        } else {
+          setAlert({ type: 'error', message: 'An unexpected error occurred' });
+        }
       }
       setLoading(false);
     }
@@ -69,9 +73,13 @@ export default function DashboardSettings() {
       } else {
         setAlert({ type: 'error', message: data.error || 'Failed to update settings.' });
       }
-    } catch (err: any) {
-      setAlert({ type: 'error', message: err.message || 'Error updating settings.' });
-    }
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+          setAlert({ type: 'error', message: err.message });
+        } else {
+          setAlert({ type: 'error', message: 'An unexpected error occurred' });
+        }
+      }
     setLoading(false);
   };
 
@@ -97,9 +105,13 @@ export default function DashboardSettings() {
       } else {
         setAlert({ type: 'error', message: data.error || 'Failed to deactivate account.' });
       }
-    } catch (err: any) {
-      setAlert({ type: 'error', message: err.message || 'Error deactivating account.' });
-    }
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+          setAlert({ type: 'error', message: err.message });
+        } else {
+          setAlert({ type: 'error', message: 'An unexpected error occurred' });
+        }
+      }
     setLoading(false);
   };
 

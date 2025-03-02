@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FaPaperPlane, FaImage, FaTimes } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +29,16 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
 
   const adminId = 1;
 
+  const markUnreadAdminMessagesAsRead = useCallback(async (data: Message[]) => {
+    const unreadMessages = data.filter(
+      (msg) => msg.user_id === adminId && !msg.is_read
+    );
+
+    if (unreadMessages.length > 0) {
+      await markMessagesAsRead(unreadMessages.map((msg) => msg.id));
+    }
+  }, []); // Memoize this function to prevent unnecessary re-creations
+
   useEffect(() => {
     if (!user) return;
 
@@ -46,7 +56,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
         console.error('Error fetching messages:', error.message);
       } else {
         setMessages(data || []);
-        markUnreadAdminMessagesAsRead(data);
+        markUnreadAdminMessagesAsRead(data); // Call the memoized function
       }
     }
 
@@ -88,16 +98,6 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       clearInterval(readReceiptInterval);
     };
   }, [user, markUnreadAdminMessagesAsRead]); // Added markUnreadAdminMessagesAsRead to the dependencies
-
-  const markUnreadAdminMessagesAsRead = async (data: Message[]) => {
-    const unreadMessages = data.filter(
-      (msg) => msg.user_id === adminId && !msg.is_read
-    );
-
-    if (unreadMessages.length > 0) {
-      await markMessagesAsRead(unreadMessages.map((msg) => msg.id));
-    }
-  };
 
   const markMessagesAsRead = async (messageIds: number[]) => {
     if (!messageIds.length) return;
@@ -172,9 +172,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${
-                msg.sender_role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              className={`flex ${msg.sender_role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div className="flex flex-col max-w-xs">
                 <div

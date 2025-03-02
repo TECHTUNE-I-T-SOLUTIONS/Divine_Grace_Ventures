@@ -26,17 +26,7 @@ export default function AuthPage() {
     router.push('/');
   };
 
-  // If you click outside the modal, close it
-  const handleOverlayClick = () => {
-    handleClose();
-  };
-
-  // Prevent clicks inside modal from closing it
-  const stopPropagation = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-  };
-
-  // --- API Functions ---
+  // Handle login, signup, OTP, forgot password, etc.
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAlert(null);
@@ -58,10 +48,14 @@ export default function AuthPage() {
         setLoading(false);
         router.push('/Dashboard');
       }, 2000);
-    } catch (error: Error) {
-      setAlert({ type: 'error', message: error.message || 'Login error' });
-      setLoading(false);
-    }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          setAlert({ type: 'error', message: error.message || 'Login error' });
+        } else {
+          setAlert({ type: 'error', message: 'An unknown error occurred' });
+          setLoading(false);
+        }
+      }
   };
 
   const sendOtp = async () => {
@@ -90,13 +84,16 @@ export default function AuthPage() {
       }
       setAlert({ type: 'info', message: 'OTP sent to your email/phone.' });
       setOtpSent(true);
-      // Automatically switch to OTP view
       setActiveView('otp');
       setLoading(false);
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Error sending OTP.' });
-      setLoading(false);
-    }
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          setAlert({ type: 'error', message: error.message || 'Error sending OTP.' });
+        } else {
+            setAlert({ type: 'error', message: 'An unknown error occurred' });
+            setLoading(false);
+        }
+      }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -123,71 +120,20 @@ export default function AuthPage() {
         setLoading(false);
         return;
       }
-      // OTP is verified successfully; hide OTP modal and switch to login view
       setAlert({ type: 'success', message: 'Signup successful! Please login.' });
       setActiveView('login');
       setOtpSent(false);
       setLoading(false);
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Signup error.' });
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (!email) {
-      setAlert({ type: 'error', message: 'Please enter your email first.' });
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/resend-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to resend OTP.');
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          setAlert({ type: 'error', message: error.message || 'Signup error.' });
+        } else {
+            setAlert({ type: 'error', message: 'An unknown error occurred' });
+            setLoading(false);
+        }
       }
-
-      setAlert({ type: 'success', message: 'A new OTP has been sent to your email.' });
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Error resending OTP.' });
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAlert(null);
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/forgot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAlert({ type: 'error', message: data.error || 'Failed to reset password.' });
-        setLoading(false);
-        return;
-      }
-      setAlert({ type: 'success', message: 'A new password has been sent to your email.' });
-      setTimeout(() => {
-        setLoading(false);
-        setActiveView('login');
-      }, 2000);
-    } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Error resetting password.' });
-      setLoading(false);
-    }
-  };
-
-  // --- Render Functions ---
   const renderCloseButton = () => (
     <button className="absolute top-2 right-2 text-white" onClick={handleClose}>
       <FaTimes size={20} />
@@ -222,30 +168,27 @@ export default function AuthPage() {
             required
           />
         </div>
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-        title="Login">
+        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
           Login
         </button>
       </form>
       <div className="mt-4 text-center">
         <p className="text-white">
-          Don't have an account?{' '}
-          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline"
-          title="Sign Up">
+          Don&apos;t have an account?{' '}
+          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline">
             Sign Up
           </button>
         </p>
         <p className="mt-2 text-white">
           Forgot Password?{' '}
-          <button onClick={() => { setActiveView('forgot'); setAlert(null); }} className="text-blue-400 hover:underline"
-          title="Reset Password">
+          <button onClick={() => { setActiveView('forgot'); setAlert(null); }} className="text-blue-400 hover:underline">
             Reset Here
           </button>
         </p>
       </div>
     </div>
   );
-
+  
   const renderSignup = () => (
     <div className="relative">
       {renderCloseButton()}
@@ -403,7 +346,7 @@ export default function AuthPage() {
           </button>
         </p>
         <p className="mt-2 text-white">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline"
           title="Sign Up">
             Sign Up

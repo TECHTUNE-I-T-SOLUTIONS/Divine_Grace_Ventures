@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Client } from 'pg';
 
-export async function POST(_request: Request) { // Renamed request to _request to avoid ESLint warning
+export async function POST() { // Removed _request parameter
   const connectionString = process.env.SUPABASE_DB_CONNECTION;
 
   if (!connectionString) {
@@ -45,7 +45,7 @@ export async function POST(_request: Request) { // Renamed request to _request t
 
     await client.end();
     return NextResponse.json({ message: 'Tables created (or already exist).' });
-  } catch (error: unknown) { // Changed 'any' to 'unknown'
+  } catch (error: unknown) {
     console.error('Error setting up tables:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });

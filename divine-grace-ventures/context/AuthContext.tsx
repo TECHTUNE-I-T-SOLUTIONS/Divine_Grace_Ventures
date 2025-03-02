@@ -5,7 +5,8 @@ import { createContext, useState, useContext, useEffect, ReactNode } from 'react
 export interface User {
   id: string;
   email: string;
-  userType: 'admin' | 'user';
+  phone?: string;
+  full_name?: string;
 }
 
 interface AuthContextType {

@@ -1,24 +1,24 @@
-import { createServerSupabaseClient } from '@supabase/auth-helpers-nextjs';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
-export async function GET(req: NextRequest) {
-  const supabase = createServerSupabaseClient({ req });
+export async function GET(): Promise<NextResponse> {
+  const supabase = createRouteHandlerClient({ cookies });
 
   try {
-    // Query the `chats` table to get unread chats for the admin
     const { data, error } = await supabase
       .from('chats')
       .select('id')
-      .eq('is_read', false); // Assuming `is_read` is a boolean column
+      .eq('is_read', false);
 
     if (error) {
-      throw error;
+      console.error('Supabase error:', error.message);
+      return NextResponse.json({ error: 'Failed to fetch unread chats' }, { status: 500 });
     }
 
-    // Return the count of unread chats
-    return NextResponse.json({ unreadCount: data?.length || 0 });
+    return NextResponse.json({ unreadCount: data?.length ?? 0 });
   } catch (error) {
-    console.error('Error fetching unread chats:', error);
-    return NextResponse.json({ error: 'Error fetching unread chats' }, { status: 500 });
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Unexpected error fetching unread chats' }, { status: 500 });
   }
 }

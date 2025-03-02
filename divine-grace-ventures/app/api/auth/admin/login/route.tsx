@@ -10,7 +10,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
   }
 
-  // Retrieve the admin record from the "admins" table
   const { data: admin, error } = await supabase
     .from('admins')
     .select('*')
@@ -21,64 +20,61 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
   }
 
-  // Verify password
   const isValid = await bcrypt.compare(password, admin.hashed_password);
   if (!isValid) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
 
-  // Update admin's is_active to true
   const { error: updateError } = await supabase
     .from('admins')
     .update({ is_active: true })
     .eq('id', admin.id);
-    
+
   if (updateError) {
     console.error('Error updating admin is_active status:', updateError.message);
   }
 
-  // Generate a JWT token for the admin.
   const token = jwt.sign(
     { id: admin.id, email: admin.email, userType: 'admin' },
     process.env.JWT_SECRET!,
     { expiresIn: '1h' }
   );
 
-  // Create response object
-  const response = NextResponse.json({ 
-    message: 'Admin login successful', 
-    token, 
+  // Create response
+  const response = NextResponse.json({
+    message: 'Admin login successful',
+    token,
     admin: {
       id: admin.id,
       email: admin.email,
       name: admin.name,
-      role: admin.role
-    } 
+      role: admin.role,
+    },
   });
 
-  // Set multiple cookies (auth-token, admin ID, and email)
+  // Set cookies on the response
   response.cookies.set('auth-token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 3600, // 1 hour
-    path: '/',
+    maxAge: 3600,
     sameSite: 'lax',
+    path: '/',
   });
 
-  response.cookies.set('admin_id', admin.id, {
-    httpOnly: false, // Can be accessed by frontend scripts if needed
+  response.cookies.set('admin_id', admin.id.toString(), {  // Ensure it's a string
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600,
-    path: '/',
     sameSite: 'lax',
+    path: '/',
   });
 
   response.cookies.set('admin_email', admin.email, {
-    httpOnly: false, // Can be accessed by frontend scripts
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600,
-    path: '/',
     sameSite: 'lax',
+    path: '/',
   });
 
   return response;

@@ -5,24 +5,31 @@ import { Button, Input, Card } from '@nextui-org/react';
 import { FaPlus, FaTag, FaDollarSign, FaListUl } from 'react-icons/fa';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
-import OrderCard, { Order } from '@/components/OrderCard';
-import { useAuth } from '@/context/AuthContext';
-import Image from 'next/image'; // Import Image component
+import Image from 'next/image';
+
+// ✅ Define the Order type
+type Order = {
+  id: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  status: string;
+};
 
 export default function AdminHomePage() {
-  const { user } = useAuth(); // Get the logged-in admin details, you can use this if necessary
-  // Form states
-  const [newProductName, setNewProductName] = useState<string>(''); // Specify type as string
-  const [newProductPrice, setNewProductPrice] = useState<string>(''); // Specify type as string
-  const [newProductAvailable, setNewProductAvailable] = useState<boolean>(true); // Specify type as boolean
-  const [newProductImage, setNewProductImage] = useState<string>(''); // Specify type as string (file path)
-  const [newProductQuantity, setNewProductQuantity] = useState<string>(''); // Specify type as string
-  const [newProductUnit, setNewProductUnit] = useState<string>(''); // Specify type as string
-  const [newProductUnitPrice, setNewProductUnitPrice] = useState<string>(''); // Specify type as string
+  const [newProductName, setNewProductName] = useState<string>('');
+  const [newProductPrice, setNewProductPrice] = useState<string>('');
+  const [newProductAvailable, setNewProductAvailable] = useState<boolean>(true);
+  const [newProductImage, setNewProductImage] = useState<string>('');
+  const [newProductQuantity, setNewProductQuantity] = useState<string>('');
+  const [newProductUnit, setNewProductUnit] = useState<string>('');
+  const [newProductUnitPrice, setNewProductUnitPrice] = useState<string>('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false); // Specify type as boolean
-  const [loading, setLoading] = useState<boolean>(false); // Specify type as boolean
-  const [orders, setOrders] = useState<Order[]>([]); // Use Order type for orders
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // ✅ Fix the order state
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -41,18 +48,17 @@ export default function AdminHomePage() {
         setLoading(false);
       }
     }
+
     fetchOrders();
-  }, []);
+  }, [setOrders]);  // ✅ Add setOrders to dependency array
+
 
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (!res.ok) {
         setAlert({ type: 'error', message: data.error || 'Failed to upload image' });
@@ -100,13 +106,13 @@ export default function AdminHomePage() {
       setNewProductQuantity('');
       setNewProductUnit('');
       setNewProductUnitPrice('');
-      setLoading(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setAlert({ type: 'error', message: error.message || 'Error adding product' });
       } else {
         setAlert({ type: 'error', message: 'An unknown error occurred while adding product' });
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -121,17 +127,18 @@ export default function AdminHomePage() {
           <p className="mb-6 break-words text-center">
             Manage orders, update inventory, send notifications, track payments, and settle disputes.
           </p>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Add New Product Section */}
             <div>
-              <Card className="bg-gray-800 rounded-xl shadow-lg" css={{ p: '2rem' }}>
+              <Card className="bg-gray-800 rounded-xl shadow-lg p-8">
                 <h3 className="text-xl mt-2 text-center font-bold mb-4">Add New Product</h3>
                 <Input
                   placeholder="Product Name"
                   value={newProductName}
                   onChange={(e) => setNewProductName(e.target.value)}
                   fullWidth
-                  contentLeft={<FaTag className="text-gray-400" />}
+                  startContent={<FaTag className="text-gray-400" />}
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
                 <Input
@@ -140,23 +147,18 @@ export default function AdminHomePage() {
                   value={newProductPrice}
                   onChange={(e) => setNewProductPrice(e.target.value)}
                   fullWidth
-                  contentLeft={<FaDollarSign className="text-gray-400" />}
+                  startContent={<FaDollarSign className="text-gray-400" />}
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
                 <div className="p-2 mb-4">
                   <label className="block mb-1 text-white">Product Image</label>
                   <input
                     type="file"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleImageUpload(e.target.files[0]);
-                      }
-                    }}
+                    onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
                     className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
                   />
                   {uploading && <p className="text-sm text-gray-300 mt-1">Uploading image...</p>}
                   {newProductImage && (
-                    // Use Image component from Next.js for optimization
                     <Image
                       src={`/api/proxy-image?filePath=${encodeURIComponent(newProductImage)}`}
                       alt="Product"
@@ -166,13 +168,14 @@ export default function AdminHomePage() {
                     />
                   )}
                 </div>
+
                 <Input
                   placeholder="Available Quantity"
                   type="number"
                   value={newProductQuantity}
                   onChange={(e) => setNewProductQuantity(e.target.value)}
                   fullWidth
-                  contentLeft={<FaListUl className="text-gray-400" />}
+                  startContent={<FaListUl className="text-gray-400" />}
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
                 <Input
@@ -190,42 +193,48 @@ export default function AdminHomePage() {
                   fullWidth
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
-                <div className="p-2 mb-4">
-                  <select
-                    value={newProductAvailable ? 'yes' : 'no'}
-                    onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
-                    className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
-                  >
-                    <option value="yes" className="w-auto">Available</option>
-                    <option value="no" className="w-auto">Not Available</option>
-                  </select>
-                </div>
-                <Button
-                  auto
-                  icon={<FaPlus className="mr-1" />}
-                  onClick={handleAddProduct}
-                  className="m-2 font-bold bg-blue-700 hover:bg-blue-800 rounded-lg"
+
+                <select
+                  value={newProductAvailable ? 'yes' : 'no'}
+                  onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
+                  className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
                 >
-                  Add Product
+                  <option value="yes">Available</option>
+                  <option value="no">Not Available</option>
+                </select>
+
+                <Button onClick={handleAddProduct} className="mt-4">
+                  <FaPlus className="mr-2" /> Add Product
                 </Button>
               </Card>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="p-8">
-        {/* Display Orders Section */}
-        <h3 className="text-xl text-center font-bold mb-4">Current Orders</h3>
-        {orders.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {orders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))}
+        <div className="mt-8">
+          <h3 className="text-xl font-bold mb-4">Recent Orders</h3>
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full text-left">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="px-4 py-2">Product Name</th>
+                  <th className="px-4 py-2">Quantity</th>
+                  <th className="px-4 py-2">Price</th>
+                  <th className="px-4 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order) => (
+                  <tr key={order.id} className="border-b border-gray-600">
+                    <td className="px-4 py-2">{order.productName}</td>
+                    <td className="px-4 py-2">{order.quantity}</td>
+                    <td className="px-4 py-2">${order.price.toFixed(2)}</td>
+                    <td className="px-4 py-2">{order.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <p className="text-center text-gray-300">No orders available</p>
-        )}
+        </div>
       </div>
     </>
   );

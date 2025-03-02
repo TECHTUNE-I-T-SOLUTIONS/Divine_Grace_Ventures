@@ -6,14 +6,32 @@ import NotificationCard from '@/components/NotificationCard';
 
 // Define the type for a notification
 interface Notification {
-  id: string;
-  message: string;  // You can expand this based on the actual structure of your notifications
+  id: number;  // Ensure this matches your DB
+  message: string;
+  created_at: string;
+  user_id?: string;
+  email?: string;
+  type?: string;
+  order_id?: number;
+  amount?: number;
+}
+
+// If your API sends `id` as string, use a separate type
+interface ApiNotification {
+  id: string | number;
+  message: string;
+  created_at: string;
+  user_id?: string;
+  email?: string;
+  type?: string;
+  order_id?: number;
+  amount?: number;
 }
 
 export default function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([]); // Use the defined Notification type
-  const [loading, setLoading] = useState<boolean>(true); // Specify the type of loading
-  const [error, setError] = useState<string>(''); // Set error type as string
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -21,9 +39,15 @@ export default function AdminNotificationsPage() {
         const res = await fetch('/api/notifications', { credentials: 'include' });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
-        setNotifications(data.notifications);
+
+        // Type the map input as ApiNotification and convert to Notification
+        const formattedNotifications = data.notifications.map((n: ApiNotification) => ({
+          ...n,
+          id: Number(n.id)  // Ensures id is number
+        }));
+
+        setNotifications(formattedNotifications);
       } catch (err: unknown) {
-        // Narrow down the error to be of type Error before accessing message
         if (err instanceof Error) {
           setError(err.message);
         } else {
@@ -33,6 +57,7 @@ export default function AdminNotificationsPage() {
         setLoading(false);
       }
     }
+
     fetchNotifications();
   }, []);
 
