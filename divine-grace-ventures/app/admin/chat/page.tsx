@@ -15,7 +15,7 @@ interface User {
 
 const AdminChatPage = () => {
   const [supabase] = useState(() => createBrowserSupabaseClient());
-  const [users, setUsers] = useState<User[]>([]); // Use User[] instead of any[]
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -26,10 +26,10 @@ const AdminChatPage = () => {
       try {
         const res = await fetch('/api/users');
         const json = await res.json();
-        setUsers(json.users || []); // Ensure the data matches the User[] type
+        setUsers(json.users || []);
       } catch (err: unknown) {
         if (err instanceof Error) {
-          console.error('Error fetching users:', err.message); // Narrow down to error handling
+          console.error('Error fetching users:', err.message);
         }
       }
     }
@@ -69,11 +69,15 @@ const AdminChatPage = () => {
     );
   };
 
+  const handleCloseChat = () => {
+    setSelectedUser(null); // Close the chat panel
+  };
+
   const activeChatUser = users.find((u) => u.id === selectedUser);
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar (Hidden on Small Screens Until Opened) */}
+      {/* Sidebar */}
       <aside
         ref={sidebarRef}
         className={`${
@@ -123,7 +127,11 @@ const AdminChatPage = () => {
 
         <div className="flex-1 p-2 overflow-y-auto bg-gradient-to-r from-gray-600 to-purple-500 mr-4">
           {selectedUser ? (
-            <AdminChatPanel selectedUser={selectedUser} supabase={supabase} />
+            <AdminChatPanel
+              selectedUser={selectedUser}
+              supabase={supabase}
+              onClose={handleCloseChat}  // ✅ Pass the required onClose prop
+            />
           ) : (
             <div className="flex items-center justify-center h-full">
               <p className="text-gray-200">Select a chat to start conversation.</p>

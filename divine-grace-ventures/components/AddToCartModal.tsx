@@ -48,7 +48,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
           }),
         });
         setAlert({ type: 'success', message: 'Item added to cart. A notification has been sent to your email.' });
-      } catch (error: unknown) {
+      } catch {
         setAlert({ type: 'error', message: 'Item added to cart but failed to send notification.' });
       }
     } else {
@@ -93,7 +93,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
             Unit Price: ₦{product.unit_price}
             {product.unit ? ` per ${product.unit}` : ''}
           </p>
-        )}        
+        )}
         <form onSubmit={handleSubmit} className="mt-4">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-300">

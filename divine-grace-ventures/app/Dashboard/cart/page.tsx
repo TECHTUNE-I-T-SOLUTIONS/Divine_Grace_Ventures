@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import CustomLoader from '@/components/CustomLoader';
 import { useAuth } from '@/context/AuthContext';
 import PaymentModal from '@/components/PaymentModal';
@@ -40,30 +41,23 @@ export default function CartPage() {
       try {
         if (!user) throw new Error("User not authenticated");
         const res = await fetch(`/api/cart?user_id=${user.id}`, { credentials: 'include' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch cart');
-        // For each cart item, if the product image exists and is not a full URL, use the proxy endpoint.
-        const updatedCart = data.cart.map((item: CartItem) => {
-          if (item.products && item.products.image && !item.products.image.startsWith('http')) {
-            return {
-              ...item,
-              products: {
-                ...item.products,
-                image: `/api/proxy-image?filePath=${encodeURIComponent(item.products.image)}`,
-              },
-            };
-          }
-          return item;
-        });
+        const data: { cart: CartItem[] } = await res.json();
+        if (!res.ok) throw new Error(data.cart ? 'Failed to fetch cart' : '');
+
+        const updatedCart = data.cart.map((item) => ({
+          ...item,
+          products: {
+            ...item.products,
+            image: item.products.image.startsWith('http')
+              ? item.products.image
+              : `/api/proxy-image?filePath=${encodeURIComponent(item.products.image)}`,
+          },
+        }));
+
         setCartItems(updatedCart);
-        // Calculate total amount using user_quantity instead of quantity
-        const total = updatedCart.reduce(
-          (acc: number, item: CartItem) => acc + (item.price * (item.user_quantity || 0)),
-          0
-        );
-        setTotalAmount(total);
-      } catch (err: any) {
-        setError(err.message);
+        setTotalAmount(updatedCart.reduce((acc, item) => acc + item.price * item.user_quantity, 0));
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setLoading(false);
       }
@@ -81,14 +75,11 @@ export default function CartPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to remove item');
-      setCartItems(cartItems.filter(item => item.id !== id));
-      // Recalculate total amount after removal
-      const newTotal = cartItems
-        .filter(item => item.id !== id)
-        .reduce((acc: number, item: CartItem) => acc + (item.price * (item.user_quantity || 0)), 0);
-      setTotalAmount(newTotal);
-    } catch (error: any) {
-      console.error('Remove cart error:', error.message);
+
+      setCartItems((prev) => prev.filter((item) => item.id !== id));
+      setTotalAmount((prev) => prev - cartItems.find((item) => item.id === id)?.price ?? 0);
+    } catch (error: unknown) {
+      console.error('Remove cart error:', error);
     }
   };
 
@@ -106,28 +97,18 @@ export default function CartPage() {
         credentials: 'include',
         body: JSON.stringify({ id: editItem?.id, user_quantity: updatedQuantity, note: updatedNote }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update item');
-      setCartItems(
-        cartItems.map(item =>
-          item.id === editItem?.id ? { ...item, user_quantity: updatedQuantity, note: updatedNote } : item
-        )
+      if (!res.ok) throw new Error('Failed to update item');
+
+      setCartItems((prev) =>
+        prev.map((item) => (item.id === editItem?.id ? { ...item, user_quantity: updatedQuantity, note: updatedNote } : item))
       );
-      // Recalculate total amount after edit
-      const newTotal = cartItems.reduce(
-        (acc: number, item: CartItem) =>
-          item.id === editItem?.id
-            ? acc + (item.price * updatedQuantity)
-            : acc + (item.price * (item.user_quantity || 0)),
-        0
-      );
-      setTotalAmount(newTotal);
+      setTotalAmount(cartItems.reduce((acc, item) => acc + item.price * (item.id === editItem?.id ? updatedQuantity : item.user_quantity), 0));
       setEditItem(null);
-    } catch (error: any) {
-      console.error('Edit cart error:', error.message);
+    } catch (error: unknown) {
+      console.error('Edit cart error:', error);
     }
   };
-
+  
   const handleCheckoutSuccess = async (reference: string, deliveryInfo: DeliveryInfo) => {
     try {
       const res = await fetch('/api/orders', {
@@ -152,8 +133,12 @@ export default function CartPage() {
       setShowPaymentModal(false);
       // Optionally, redirect to the orders page:
       // router.push('/Dashboard/orders');
-    } catch (error: any) {
-      console.error('Order creation error:', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Order creation error:', error.message);
+      } else {
+        console.error('Unknown error occurred during order creation');
+      }
     }
   };
 
@@ -170,7 +155,7 @@ export default function CartPage() {
         <ul className="space-y-4">
           {cartItems.map((item: CartItem) => (
             <li key={item.id} className="flex items-center justify-between p-4 bg-white rounded shadow">
-              <img src={item.products.image} alt={item.products.name} className="w-16 h-16 object-cover rounded" />
+              <Image src={item.products.image} alt={item.products.name} width={64} height={64} className="rounded" />
               <div className="flex-grow ml-4">
                 <p className="font-bold text-black">{item.products.name}</p>
                 <p className="text-sm text-gray-600">Price: ₦{item.price}</p>

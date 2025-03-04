@@ -1,43 +1,40 @@
 // app/api/feedback/route.ts
 import { NextResponse } from 'next/server';
-import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-export async function POST(req) {
-  const supabase = createPagesServerClient({ cookies });
-  const { user_id, message } = await req.json();
+// Explicitly type 'req' as 'Request'
+export async function POST(req: Request) {
+    const supabase = createRouteHandlerClient({ cookies });
 
-  // Check if user_id is provided
-  if (!user_id) {
-    return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-  }
+    const { user_id, message } = await req.json();
 
-  // Insert the feedback into the 'feedback' table with the user_id
-  const { data, error } = await supabase
-    .from('feedback')
-    .insert([{ user_id, message }]);
+    if (!user_id) {
+        return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
 
-  // If there was an error inserting the feedback
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    const { data, error } = await supabase
+        .from('feedback')
+        .insert([{ user_id, message }]);
 
-  // Return a success response
-  return NextResponse.json({ success: true, data });
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data });
 }
 
-export async function GET() { // Removed 'req'
-  const supabase = createPagesServerClient({ cookies });
+export async function GET() {
+    const supabase = createRouteHandlerClient({ cookies });
 
-  // Fetch all feedback messages from the 'feedback' table
-  const { data, error } = await supabase
-    .from('feedback')
-    .select('user_id, message, created_at') // Select user_id and message along with timestamp
-    .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+        .from('feedback')
+        .select('user_id, message, created_at')
+        .order('created_at', { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-  return NextResponse.json({ data });
+    return NextResponse.json({ data });
 }

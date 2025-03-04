@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { FaUser } from 'react-icons/fa';
-import CustomLoader from '@/components/CustomLoader'; // Assuming your custom loader component is here
+import CustomLoader from '@/components/CustomLoader';
+
+// Define the shape of a feedback item (match this to your actual API response)
+type Feedback = {
+  user_id: string;
+  message: string;
+  created_at: string;
+};
 
 export default function FeedbackPage() {
-  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]); // Typed useState
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,12 +21,12 @@ export default function FeedbackPage() {
         const res = await fetch('/api/feedback');
         const data = await res.json();
         if (res.ok) {
-          setFeedbacks(data.data);
+          setFeedbacks(data.data); // Ensure your API returns data shaped like Feedback[]
         } else {
-          console.error("Error fetching feedbacks:", data.error);
+          console.error('Error fetching feedbacks:', data.error);
         }
       } catch (error) {
-        console.error("Error fetching feedbacks:", error);
+        console.error('Error fetching feedbacks:', error);
       } finally {
         setLoading(false);
       }
@@ -46,7 +53,7 @@ export default function FeedbackPage() {
           </thead>
           <tbody className="text-xs sm:text-sm">
             {feedbacks.map((feedback, index) => (
-              <tr key={feedback.created_at} className="hover:bg-gray-100 transition-all">
+              <tr key={`${feedback.user_id}-${feedback.created_at}`} className="hover:bg-gray-100 transition-all">
                 <td className="border-t border-gray-300 px-2 sm:px-2 py-2 text-sm font-semibold text-gray-700">
                   {index + 1}
                 </td>
@@ -60,7 +67,9 @@ export default function FeedbackPage() {
                   <p className="truncate max-w-xs">{feedback.message}</p>
                 </td>
                 <td className="border-t border-gray-300 px-4 sm:px-6 py-3 text-gray-600">
-                  <span className="text-xs sm:text-sm">{new Date(feedback.created_at).toLocaleString()}</span>
+                  <span className="text-xs sm:text-sm">
+                    {new Date(feedback.created_at).toLocaleString()}
+                  </span>
                 </td>
               </tr>
             ))}

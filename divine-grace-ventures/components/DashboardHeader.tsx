@@ -94,8 +94,12 @@ export default function DashboardHeader({ sidebarOpen, toggleSidebar }: Dashboar
       });
       setShowLogoutConfirm(false);
       router.push('/');
-    } catch (err: any) {
-      console.error(err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error('An unknown error occurred during logout');
+      }
     }
   };
 

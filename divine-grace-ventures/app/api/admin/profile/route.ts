@@ -9,12 +9,13 @@ interface JwtPayload {
 }
 
 interface AdminPayload {
+  email?: string;  // email is optional
   full_name?: string;
   phone?: string;
 }
 
 export async function GET() {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // ✅ Add `await` here
   const token = cookieStore.get('auth-token')?.value;
 
   if (!token) {
@@ -45,8 +46,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // ✅ Add `await` here
   const token = cookieStore.get('auth-token')?.value;
+
   if (!token) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -54,7 +56,9 @@ export async function PUT(request: Request) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     const adminId = decoded.id;
+
     const { full_name, phone, password } = await request.json();
+
     const payload: AdminPayload = { full_name, phone };
 
     if (password) {

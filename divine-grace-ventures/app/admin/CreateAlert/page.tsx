@@ -1,39 +1,64 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FaTrash, FaEdit, FaSave, FaPlus } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, PostgrestError } from '@supabase/supabase-js';
 import CustomLoader from '@/components/CustomLoader';
 import CustomAlert from '@/components/CustomAlert';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+// Define the Alert type to match your Supabase table structure
+type Alert = {
+  id: number;
+  message: string;
+  admin_id: string;
+  created_at: string;
+};
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Alert message type for success/error UI feedback
+type AlertMessage = { type: 'success' | 'error'; message: string };
 
 export default function CreateAlert() {
   const { user } = useAuth();
-  const [alerts, setAlerts] = useState([]);
+
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editingMessage, setEditingMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(null);
+  const [alertMessage, setAlertMessage] = useState<AlertMessage | null>(null);
 
-  useEffect(() => {
-    fetchAlerts();
+  // Move handleSupabaseError to useCallback to stabilize it
+  const handleSupabaseError = useCallback((error: unknown) => {
+    if (isPostgrestError(error)) {
+      setAlertMessage({ type: 'error', message: error.message });
+    } else {
+      setAlertMessage({ type: 'error', message: 'An unexpected error occurred.' });
+    }
   }, []);
 
-  const fetchAlerts = async () => {
+  // Wrap fetchAlerts in useCallback to stabilize it
+  const fetchAlerts = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.from('alerts').select('*');
       if (error) throw error;
-      setAlerts(data);
+      setAlerts(data as Alert[]);
     } catch (error) {
-      setAlertMessage({ type: 'error', message: error.message });
+      handleSupabaseError(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleSupabaseError]); // ✅ Added handleSupabaseError to the dependencies
+
+  useEffect(() => {
+    fetchAlerts();
+  }, [fetchAlerts]); // ✅ Now safe
 
   const createAlert = async () => {
     if (!newMessage.trim()) return;
@@ -43,37 +68,42 @@ export default function CreateAlert() {
         setAlertMessage({ type: 'error', message: 'User not authenticated' });
         return;
       }
-      const adminId = user?.id;
-      const { error } = await supabase.from('alerts').insert([ { message: newMessage, admin_id: adminId } ]);
+      const adminId = user.id;
+      const { error } = await supabase.from('alerts').insert([
+        { message: newMessage, admin_id: adminId }
+      ]);
       if (error) throw error;
       setNewMessage('');
       setAlertMessage({ type: 'success', message: 'Alert created successfully' });
       fetchAlerts();
     } catch (error) {
-      setAlertMessage({ type: 'error', message: error.message });
+      handleSupabaseError(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateAlert = async (id) => {
+  const updateAlert = async (id: number) => {
     if (!editingMessage.trim()) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from('alerts').update({ message: editingMessage }).eq('id', id);
+      const { error } = await supabase
+        .from('alerts')
+        .update({ message: editingMessage })
+        .eq('id', id);
       if (error) throw error;
       setEditingId(null);
       setEditingMessage('');
       setAlertMessage({ type: 'success', message: 'Alert updated successfully' });
       fetchAlerts();
     } catch (error) {
-      setAlertMessage({ type: 'error', message: error.message });
+      handleSupabaseError(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteAlert = async (id) => {
+  const deleteAlert = async (id: number) => {
     setLoading(true);
     try {
       const { error } = await supabase.from('alerts').delete().eq('id', id);
@@ -81,10 +111,22 @@ export default function CreateAlert() {
       setAlertMessage({ type: 'success', message: 'Alert deleted successfully' });
       fetchAlerts();
     } catch (error) {
-      setAlertMessage({ type: 'error', message: error.message });
+      handleSupabaseError(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Type guard to check if error is a PostgrestError
+  const isPostgrestError = (error: unknown): error is PostgrestError => {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      'details' in error &&
+      'hint' in error &&
+      'code' in error
+    );
   };
 
   return (
@@ -106,7 +148,10 @@ export default function CreateAlert() {
       </div>
       <ul>
         {alerts.map((alert) => (
-          <li key={alert.id} className="flex justify-between items-center bg-purple-900 text-white p-3 mb-2 rounded">
+          <li
+            key={alert.id}
+            className="flex justify-between items-center bg-purple-900 text-white p-3 mb-2 rounded"
+          >
             {editingId === alert.id ? (
               <input
                 type="text"
@@ -123,7 +168,14 @@ export default function CreateAlert() {
                   <FaSave />
                 </button>
               ) : (
-                <button onClick={() => { setEditingId(alert.id); setEditingMessage(alert.message); }} className="text-blue-600" title="Edit the Alert">
+                <button
+                  onClick={() => {
+                    setEditingId(alert.id);
+                    setEditingMessage(alert.message);
+                  }}
+                  className="text-blue-600"
+                  title="Edit the Alert"
+                >
                   <FaEdit />
                 </button>
               )}

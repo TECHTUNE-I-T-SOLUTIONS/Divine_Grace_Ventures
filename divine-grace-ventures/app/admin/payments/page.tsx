@@ -6,11 +6,19 @@ import PaymentCard from '@/components/PaymentCard';
 
 // Define a type for the payment object
 interface Payment {
-  id: string;
+  id: number;
+  order_id: number;
+  user_id: string;
+  payment_reference: string;
+  payer_name: string;
   amount: number;
-  date: string;
+  delivery_address: string;
+  delivery_phone: string;
+  note?: string;
+  payment_date?: string;
   status: string;
-  // Add other fields as per your API response
+  created_at: string;
+  updated_at: string;
 }
 
 export default function AdminPaymentsPage() {

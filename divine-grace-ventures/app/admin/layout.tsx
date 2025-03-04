@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import useSound from 'use-sound';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 import { FaBars, FaSignOutAlt, FaUser, FaBell, FaCommentDots, FaRegCommentAlt, FaTachometerAlt, FaBoxOpen, FaClipboardList, FaCreditCard, FaTimes } from 'react-icons/fa';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -129,8 +130,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <button className="text-white lg:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <FaBars size={24} />
             </button>
-            <img src="/images/logo.png" alt="Logo" className="h-8 w-8 rounded-lg" />
-            <span className="text-sm text-white font-bold sm:text-xl">Admin Panel</span>
+          <Image src="/images/logo.png" alt="Logo" width={32} height={32} className="rounded-lg" />
+          <span className="text-sm text-white font-bold sm:text-xl">Admin Panel</span>
           </div>
           <div className="flex items-center space-x-2">
             <Link href="/admin/CreateAlert" title="Manage Alerts" passHref>

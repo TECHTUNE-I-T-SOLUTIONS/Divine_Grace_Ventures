@@ -10,18 +10,17 @@ interface Profile {
   email: string;
   full_name: string;
   phone: string;
-  // Add other fields as needed
 }
 
 export default function AdminProfilePage() {
   const { user, setUser } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null); // Specify the type as Profile or null
-  const [loading, setLoading] = useState<boolean>(true); // Specify the type as boolean
-  const [fullName, setFullName] = useState<string>(''); // Specify the type as string
-  const [phone, setPhone] = useState<string>(''); // Specify the type as string
-  const [password, setPassword] = useState<string>(''); // Specify the type as string
-  const [confirmPassword, setConfirmPassword] = useState<string>(''); // Specify the type as string
-  const [alertMessage, setAlertMessage] = useState<string>(''); // Specify the type as string
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [fullName, setFullName] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [alertMessage, setAlertMessage] = useState<string>('');
 
   useEffect(() => {
     async function loadProfile() {
@@ -37,7 +36,7 @@ export default function AdminProfilePage() {
         }
       } catch (err) {
         if (err instanceof Error) {
-          setAlertMessage(err.message); // Ensure we are dealing with an instance of Error
+          setAlertMessage(err.message);
         } else {
           setAlertMessage('An unknown error occurred');
         }
@@ -56,29 +55,42 @@ export default function AdminProfilePage() {
       setLoading(false);
       return;
     }
+
     const payload: { full_name: string; phone: string; password?: string } = { full_name: fullName, phone };
     if (password) payload.password = password;
+
     try {
       const res = await fetch('/api/admin/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) {
         setAlertMessage(data.error || 'Failed to update profile');
       } else {
         setAlertMessage('Profile updated successfully');
-        // Update the AuthContext with new details
-        setUser({ ...user, full_name: fullName, phone });
+
+        // ✅ Only update context if user is not null
+        if (user) {
+          setUser({
+            ...user,
+            full_name: fullName,
+            phone,
+            id: user.id, // Preserve user ID
+            email: user.email, // Preserve email
+          });
+        }
       }
     } catch (err) {
       if (err instanceof Error) {
-        setAlertMessage(err.message); // Handle the error properly
+        setAlertMessage(err.message);
       } else {
         setAlertMessage('An unknown error occurred');
       }
     }
+
     setLoading(false);
   };
 

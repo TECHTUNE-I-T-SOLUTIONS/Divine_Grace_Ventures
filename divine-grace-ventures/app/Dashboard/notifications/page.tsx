@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
-import { useAuth } from '@/context/AuthContext';
 import NotificationCard from '@/components/NotificationCard';
 
 interface Notification {
