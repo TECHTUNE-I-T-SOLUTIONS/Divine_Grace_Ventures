@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 
-// Manually type the context (This is the key!)
-interface RouteContext {
-    params: {
-        id: string;
-    };
-}
-
 // GET Handler
 export async function GET(
     req: NextRequest,
-    context: RouteContext // Manually apply the type to `context`
+    context: { params: { id: string } }
 ) {
     const { id } = context.params;
 
