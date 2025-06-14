@@ -9,6 +9,7 @@ interface SettingsResponse {
   email_notifications: boolean;
   sms_notifications: boolean;
   dark_mode: boolean;
+  error?: string;
 }
 
 export default function DashboardSettings() {

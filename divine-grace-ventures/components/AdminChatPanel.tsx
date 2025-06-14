@@ -79,7 +79,7 @@ export default function AdminChatPanel({ selectedUser, supabase, onClose }: Admi
           filter: `admin_id=eq.${adminId} and user_id=eq.${selectedUser}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+          setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
       .subscribe();

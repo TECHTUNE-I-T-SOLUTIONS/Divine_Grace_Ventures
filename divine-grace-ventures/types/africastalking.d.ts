@@ -1,6 +1,6 @@
 declare module 'africastalking' {
     interface SMSService {
-        send(options: { to: string | string[]; message: string; sender?: string }): Promise<any>;
+        send(options: { to: string | string[]; message: string; sender?: string }): Promise<unknown>;
     }
 
     interface AfricaStalkingInstance {

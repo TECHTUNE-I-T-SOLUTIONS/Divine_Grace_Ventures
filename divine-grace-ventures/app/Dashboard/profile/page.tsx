@@ -20,7 +20,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [email] = useState(user?.email || ''); // email is not editable
   const [phone, setPhone] = useState(user?.phone || '');
-  const [address, setAddress] = useState(user?.address || '');
+  const [address, setAddress] = useState(user?.address ?? '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [alertMessage, setAlertMessage] = useState<string>('');
@@ -49,10 +49,22 @@ export default function ProfilePage() {
       } else {
         setAlertMessage('Profile updated successfully');
         // Update auth context with new details.
-        setUser({ ...user, full_name: fullName, phone, address });
+        if (user) {
+          setUser({ 
+            id: user.id, 
+            email: user.email, 
+            full_name: fullName, 
+            phone, 
+            address 
+          });
+        }
       }
-    } catch (err: Error) {
-      setAlertMessage(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setAlertMessage(err.message);
+      } else {
+        setAlertMessage('An unexpected error occurred');
+      }
     }
     setLoading(false);
   };

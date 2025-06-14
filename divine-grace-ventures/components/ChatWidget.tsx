@@ -21,6 +21,8 @@ interface Message {
   is_read: boolean;
 }
 
+
+
 export default function ChatWidget({ closeChat }: ChatWidgetProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,12 +45,14 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
     if (!user) return;
 
     async function fetchMessages() {
+      if (!user) return;
+      const userId = user.id;
+
       const { data, error } = await supabase
         .from('chats')
         .select('*')
         .or(
-          `and(user_id.eq.${user.id},admin_id.eq.${adminId})`,
-          `and(user_id.eq.${adminId},admin_id.eq.${user.id})`
+          `and(user_id.eq.${userId},admin_id.eq.${adminId}),and(user_id.eq.${adminId},admin_id.eq.${userId})`
         )
         .order('created_at', { ascending: true });
 
@@ -60,6 +64,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
       }
     }
 
+
     fetchMessages();
 
     const channel = supabase
@@ -69,7 +74,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
         { event: 'INSERT', schema: 'public', table: 'chats' },
         async (payload) => {
           const newMsg = payload.new;
-          setMessages((prev) => [...prev, newMsg]);
+          setMessages((prev) => [...prev, newMsg as Message]);
 
           if (newMsg.user_id === adminId && !newMsg.is_read) {
             await markMessagesAsRead([newMsg.id]);
@@ -82,7 +87,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
         (payload) => {
           setMessages((prevMessages) =>
             prevMessages.map((msg) =>
-              msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
+              msg.id === payload.new.id ? { ...msg, ...(payload.new as Message) } : msg
             )
           );
         }
@@ -184,7 +189,7 @@ export default function ChatWidget({ closeChat }: ChatWidgetProps) {
                 >
                   {msg.image_url ? (
                     <Image
-                      src={supabase.storage.from('chat-images').getPublicUrl(msg.image_url).publicURL}
+                      src={supabase.storage.from('chat-images').getPublicUrl(msg.image_url).data.publicUrl}
                       alt="sent image"
                       className="max-h-40 rounded"
                       width={160} // Image optimization requires width and height

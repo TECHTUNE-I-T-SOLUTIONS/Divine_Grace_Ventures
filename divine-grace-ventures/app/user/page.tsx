@@ -3,10 +3,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import ReCAPTCHA from 'react-google-recaptcha';
+// import ReCAPTCHA from 'react-google-recaptcha';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
 import { FaTimes } from 'react-icons/fa';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -15,11 +16,12 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [recaptchaToken, setRecaptchaToken] = useState('');
+  // const [recaptchaToken, setRecaptchaToken] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const { refreshUser } = useAuth();
 
   // Closes the modal (here, by navigating away)
   const handleClose = () => {
@@ -31,38 +33,46 @@ export default function AuthPage() {
     e.preventDefault();
     setAlert(null);
     setLoading(true);
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
+
       if (!res.ok) {
         setAlert({ type: 'error', message: data.error || 'Login failed.' });
         setLoading(false);
         return;
       }
+
+      // 🟢 Immediately refresh AuthContext with the logged in user
+      await refreshUser();
+
       setAlert({ type: 'success', message: 'Login successful! Redirecting...' });
+
       setTimeout(() => {
         setLoading(false);
         router.push('/Dashboard');
       }, 2000);
     } catch (error: unknown) {
-        if (error instanceof Error) {
-          setAlert({ type: 'error', message: error.message || 'Login error' });
-        } else {
-          setAlert({ type: 'error', message: 'An unknown error occurred' });
-          setLoading(false);
-        }
+      if (error instanceof Error) {
+        setAlert({ type: 'error', message: error.message || 'Login error' });
+      } else {
+        setAlert({ type: 'error', message: 'An unknown error occurred' });
       }
+      setLoading(false);
+    }
   };
 
   const sendOtp = async () => {
-    if (!recaptchaToken) {
-      setAlert({ type: 'error', message: 'Please complete the reCAPTCHA.' });
-      return;
-    }
+    // if (!recaptchaToken) {
+    //   setAlert({ type: 'error', message: 'Please complete the reCAPTCHA.' });
+    //   return;
+    // }
     setLoading(true);
     try {
       const res = await fetch('/api/auth/signup', {
@@ -72,7 +82,7 @@ export default function AuthPage() {
           email,
           username: email.split('@')[0],
           password,
-          recaptchaToken,
+          // recaptchaToken,
           phone,
         }),
       });
@@ -133,6 +143,32 @@ export default function AuthPage() {
         }
       }
   };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAlert(null);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'error', message: data.error || 'Failed to send reset link.' });
+      } else {
+        setAlert({ type: 'success', message: 'Password reset link sent to your email.' });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setAlert({ type: 'error', message: error.message || 'An error occurred.' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const renderCloseButton = () => (
     <button className="absolute top-2 right-2 text-white" onClick={handleClose}>
@@ -240,12 +276,12 @@ export default function AuthPage() {
             required
           />
         </div>
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <ReCAPTCHA
             sitekey="6Lcq9tUqAAAAAMPhI0XmKhFm6nNmxaWCtbuElU5C"
-            onChange={(token) => setRecaptchaToken(token || '')}
+            onChange={(token: string | null) => setRecaptchaToken(token || '')}
           />
-        </div>
+        </div> */}
         {!otpSent && (
           <button
             type="button"
@@ -278,6 +314,44 @@ export default function AuthPage() {
       </div>
     </div>
   );
+
+  // Function to resend OTP
+  const handleResendOtp = async () => {
+    // if (!recaptchaToken) {
+    //   setAlert({ type: 'error', message: 'Please complete the reCAPTCHA.' });
+    //   return;
+    // }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          username: email.split('@')[0],
+          password,
+          // recaptchaToken,
+          phone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAlert({ type: 'error', message: data.error || 'Failed to resend OTP.' });
+        setLoading(false);
+        return;
+      }
+      setAlert({ type: 'info', message: 'OTP resent to your email/phone.' });
+      setOtpSent(true);
+      setLoading(false);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setAlert({ type: 'error', message: error.message || 'Error resending OTP.' });
+      } else {
+        setAlert({ type: 'error', message: 'An unknown error occurred' });
+      }
+      setLoading(false);
+    }
+  };
 
   const renderOtp = () => (
     <div className="relative">
@@ -355,6 +429,7 @@ export default function AuthPage() {
       </div>
     </div>
   );
+
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-800 bg-opacity-90">
