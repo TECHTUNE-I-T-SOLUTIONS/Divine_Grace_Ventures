@@ -6,11 +6,19 @@ import { useAuth } from '@/context/AuthContext';
 import PaymentCard from '@/components/PaymentCard';
 
 type Transaction = {
-  id: string;
+  id: number;
+  order_id: number;
+  user_id: string;
+  payment_reference: string;
+  payer_name: string;
   amount: number;
-  date: string;
+  delivery_address: string;
+  delivery_phone: string;
+  note?: string;
+  payment_date?: string;
   status: string;
-  description: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export default function TransactionsPage() {
@@ -18,7 +26,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-
+  
   useEffect(() => {
     async function fetchTransactions() {
       try {

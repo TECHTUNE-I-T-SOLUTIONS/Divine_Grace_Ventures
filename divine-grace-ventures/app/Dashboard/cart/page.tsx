@@ -77,7 +77,10 @@ export default function CartPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to remove item');
 
       setCartItems((prev) => prev.filter((item) => item.id !== id));
-      setTotalAmount((prev) => prev - cartItems.find((item) => item.id === id)?.price ?? 0);
+      setTotalAmount((prev) => {
+        const removedItem = cartItems.find((item) => item.id === id);
+        return removedItem ? prev - removedItem.price : prev;
+      });
     } catch (error: unknown) {
       console.error('Remove cart error:', error);
     }
@@ -191,6 +194,7 @@ export default function CartPage() {
         <PaymentModal
           totalAmount={totalAmount}
           email={user.email}
+          orderId={0} // Pass a placeholder or generated orderId if available
           onSuccess={handleCheckoutSuccess}
           onClose={() => setShowPaymentModal(false)}
         />

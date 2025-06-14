@@ -28,10 +28,10 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
     // Prepare a custom HTML notification message
     const emailHtml = `
       <div style="text-align: center; padding: 20px; background: #f8f8f8; font-family: sans-serif;">
-        <img src="https://yourdomain.com/logo.png" alt="Divine Grace Ventures" style="max-width: 150px; margin-bottom: 20px;" />
+        <img src="https://divinegraceventures.vercel.app/logo.png" alt="Divine Grace Ventures" style="max-width: 150px; margin-bottom: 20px;" />
         <h1 style="color: #333;">Item Added to Cart</h1>
         <p style="font-size: 16px;">The product <strong>${product.name}</strong> has been added to your cart.</p>
-        <a href="https://yourdomain.com/cart" style="padding: 10px 20px; background: #0070f3; color: #fff; text-decoration: none; border-radius: 5px;">View Cart</a>
+        <a href="https://divinegraceventures.vercel.app/cart" style="padding: 10px 20px; background: #0070f3; color: #fff; text-decoration: none; border-radius: 5px;">View Cart</a>
       </div>
     `;
 

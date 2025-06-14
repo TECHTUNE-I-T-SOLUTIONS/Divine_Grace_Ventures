@@ -1,39 +1,31 @@
 import { NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { createClient } from '@supabase/supabase-js';
 
-export async function POST() { // Removed _request parameter
-  const connectionString = process.env.SUPABASE_DB_CONNECTION;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-  if (!connectionString) {
-    return NextResponse.json({ error: 'Database connection string not set.' }, { status: 500 });
-  }
-
-  const client = new Client({ connectionString });
-
+export async function POST() {
   try {
-    await client.connect();
+    // Check if the products table exists (Supabase doesn’t support metadata queries via client)
+    // So, just attempt to select with a limit
+    const { error } = await supabase.from('products').select('*').limit(1);
 
-    // Check if the products table exists
-    const res = await client.query("SELECT to_regclass('public.products') as table_exists");
-    if (!res.rows[0].table_exists) {
-      // Create the products table if it doesn't exist
-      await client.query(`
-        CREATE TABLE public.products (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          price NUMERIC(10,2) NOT NULL,
-          available BOOLEAN DEFAULT TRUE,
-          quantity INTEGER DEFAULT 0,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (error) {
+      // If the table doesn't exist, error.code might be "42P01" (undefined table)
+      if (error.code === '42P01') {
+        // Supabase client does not support table creation
+        return NextResponse.json({
+          error: "Table 'products' does not exist. Please create it manually via Supabase SQL Editor."
+        }, { status: 500 });
+      }
+
+      // Other errors
+      throw error;
     }
 
-    await client.end();
-    return NextResponse.json({ message: 'Products table created or already exists.' });
+    return NextResponse.json({ message: 'Products table exists.' });
   } catch (error: unknown) {
-    await client.end();
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

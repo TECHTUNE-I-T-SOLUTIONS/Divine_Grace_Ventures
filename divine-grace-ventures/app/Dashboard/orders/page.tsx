@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import CustomLoader from '@/components/CustomLoader';
-import OrderCard, { Order } from '@/components/OrderCard';
+import OrderCard, { Order, OrderItem } from '@/components/OrderCard';
 import { useAuth } from '@/context/AuthContext';
-
-interface OrderItem {
-  products: {
-    name: string;
-  };
-  // Define other fields if necessary
-}
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -43,8 +36,9 @@ export default function OrdersPage() {
 
   // Filter orders by search (search within order items' names)
   const filteredOrders = orders.filter((order) =>
+    Array.isArray(order.order_items) &&
     order.order_items.some((item: OrderItem) =>
-      (item.products.name || '').toLowerCase().includes(search.toLowerCase())
+      (item.name || '').toLowerCase().includes(search.toLowerCase())
     )
   );
 

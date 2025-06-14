@@ -1,3 +1,4 @@
+// app/admin/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,35 +6,32 @@ import { Button, Input, Card } from '@nextui-org/react';
 import { FaPlus, FaTag, FaDollarSign, FaListUl } from 'react-icons/fa';
 import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
-import Image from 'next/image';
-
-// ✅ Define the Order type
-type Order = {
-  id: string;
-  productName: string;
-  quantity: number;
-  price: number;
-  status: string;
-};
+import OrderCard, { Order } from '@/components/OrderCard';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminHomePage() {
-  const [newProductName, setNewProductName] = useState<string>('');
-  const [newProductPrice, setNewProductPrice] = useState<string>('');
-  const [newProductAvailable, setNewProductAvailable] = useState<boolean>(true);
-  const [newProductImage, setNewProductImage] = useState<string>('');
-  const [newProductQuantity, setNewProductQuantity] = useState<string>('');
-  const [newProductUnit, setNewProductUnit] = useState<string>('');
-  const [newProductUnitPrice, setNewProductUnitPrice] = useState<string>('');
-  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const { user } = useAuth(); // Get the logged-in admin details
 
-  // ✅ Fix the order state
+  // Show a welcome message if user is available
+  const adminName = user?.full_name || user?.email || 'Admin';
+
+  // Form states
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductPrice, setNewProductPrice] = useState('');
+  const [newProductAvailable, setNewProductAvailable] = useState(true);
+  const [newProductImage, setNewProductImage] = useState(''); // will store the file path
+  const [newProductQuantity, setNewProductQuantity] = useState('');
+  const [newProductUnit, setNewProductUnit] = useState('');
+  const [newProductUnitPrice, setNewProductUnitPrice] = useState('');
+  const [alert, setAlert] = useState<{ type: 'error' | 'success' | 'info'; message: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     async function fetchOrders() {
       try {
+        // Fetch all orders from your API endpoint (ensure it returns { orders: [...] })
         const res = await fetch('/api/orders');
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch orders');
@@ -48,21 +46,25 @@ export default function AdminHomePage() {
         setLoading(false);
       }
     }
-
     fetchOrders();
-  }, [setOrders]);  // ✅ Add setOrders to dependency array
+  }, []);
 
 
+  // Handle file upload via API endpoint (using Supabase Storage)
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
       const data = await res.json();
       if (!res.ok) {
         setAlert({ type: 'error', message: data.error || 'Failed to upload image' });
       } else {
+        // The API returns a filePath like "products/123456789.jpg"
         setNewProductImage(data.filePath);
         setAlert({ type: 'success', message: 'Image uploaded successfully!' });
       }
@@ -70,7 +72,7 @@ export default function AdminHomePage() {
       if (error instanceof Error) {
         setAlert({ type: 'error', message: error.message || 'Image upload error' });
       } else {
-        setAlert({ type: 'error', message: 'An unknown error occurred during upload' });
+        setAlert({ type: 'error', message: 'Image upload error' });
       }
     } finally {
       setUploading(false);
@@ -100,19 +102,17 @@ export default function AdminHomePage() {
         return;
       }
       setAlert({ type: 'success', message: 'Product added successfully!' });
+      // Clear form fields
       setNewProductName('');
       setNewProductPrice('');
       setNewProductImage('');
       setNewProductQuantity('');
-      setNewProductUnit('');
-      setNewProductUnitPrice('');
     } catch (error: unknown) {
       if (error instanceof Error) {
         setAlert({ type: 'error', message: error.message || 'Error adding product' });
       } else {
-        setAlert({ type: 'error', message: 'An unknown error occurred while adding product' });
+        setAlert({ type: 'error', message: 'Error adding product' });
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -122,12 +122,11 @@ export default function AdminHomePage() {
       {loading && <CustomLoader />}
       <div className="min-h-screen bg-gradient-to-r from-indigo-900 to-purple-900 text-white">
         <div className="p-8">
-          <h2 className="text-3xl font-bold mb-4 text-center">Admin Dashboard</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">Welcome to your Dashboard, {adminName}!</h2>
           {alert && <CustomAlert type={alert.type} message={alert.message} />}
           <p className="mb-6 break-words text-center">
             Manage orders, update inventory, send notifications, track payments, and settle disputes.
           </p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Add New Product Section */}
             <div>
@@ -138,7 +137,7 @@ export default function AdminHomePage() {
                   value={newProductName}
                   onChange={(e) => setNewProductName(e.target.value)}
                   fullWidth
-                  startContent={<FaTag className="text-gray-400" />}
+                  startContent={<FaTag className="text-gray-400 m-2" />}
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
                 <Input
@@ -154,28 +153,31 @@ export default function AdminHomePage() {
                   <label className="block mb-1 text-white">Product Image</label>
                   <input
                     type="file"
-                    onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleImageUpload(e.target.files[0]);
+                      }
+                    }}
                     className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
                   />
                   {uploading && <p className="text-sm text-gray-300 mt-1">Uploading image...</p>}
                   {newProductImage && (
-                    <Image
-                      src={`/api/proxy-image?filePath=${encodeURIComponent(newProductImage)}`}
-                      alt="Product"
-                      width={200}
-                      height={200}
-                      className="p-2 mt-2 rounded-lg max-h-32"
+                    // Use the proxy to display the image from the stored file path
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={`/api/proxy-image?filePath=${encodeURIComponent(newProductImage)}`} 
+                      alt="Product" 
+                      className="p-2 mt-2 rounded-lg max-h-32" 
                     />
                   )}
                 </div>
-
                 <Input
                   placeholder="Available Quantity"
                   type="number"
                   value={newProductQuantity}
                   onChange={(e) => setNewProductQuantity(e.target.value)}
                   fullWidth
-                  startContent={<FaListUl className="text-gray-400" />}
+                  startContent={<FaListUl className="text-gray-400 m-2" />}
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
                 <Input
@@ -193,47 +195,42 @@ export default function AdminHomePage() {
                   fullWidth
                   className="m-2 w-auto mb-4 bg-gray-700 rounded-lg"
                 />
-
-                <select
-                  value={newProductAvailable ? 'yes' : 'no'}
-                  onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
+                <div className="p-2 mb-4">
+                  <select
+                    value={newProductAvailable ? 'yes' : 'no'}
+                    onChange={(e) => setNewProductAvailable(e.target.value === 'yes')}
+                    className="w-full px-3 py-2 rounded-lg bg-gray-700 text-white"
+                  >
+                    <option value="yes" className="w-auto">Available</option>
+                    <option value="no" className="w-auto">Not Available</option>
+                  </select>
+                </div>
+                <Button
+                  onPress={handleAddProduct}
+                  className="m-2 font-bold bg-blue-700 hover:bg-blue-900 rounded-full"
                 >
-                  <option value="yes">Available</option>
-                  <option value="no">Not Available</option>
-                </select>
-
-                <Button onClick={handleAddProduct} className="mt-4">
-                  <FaPlus className="mr-2" /> Add Product
+                  <FaPlus className="mr-1" />
+                  Add Product
                 </Button>
               </Card>
             </div>
+            {/* Recent Orders Section */}
+            <div>
+              <Card className="p-8 bg-gray-800 rounded-xl shadow-lg">
+                <h3 className="text-xl text-center font-bold mb-4">Recent Orders</h3>
+                {orders.length === 0 ? (
+                  <p>No orders found.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <OrderCard key={order.id} order={{ ...order, adminView: true }} />
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
           </div>
-        </div>
-        <div className="mt-8">
-          <h3 className="text-xl font-bold mb-4">Recent Orders</h3>
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full text-left">
-              <thead>
-                <tr className="bg-gray-700">
-                  <th className="px-4 py-2">Product Name</th>
-                  <th className="px-4 py-2">Quantity</th>
-                  <th className="px-4 py-2">Price</th>
-                  <th className="px-4 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-b border-gray-600">
-                    <td className="px-4 py-2">{order.productName}</td>
-                    <td className="px-4 py-2">{order.quantity}</td>
-                    <td className="px-4 py-2">${order.price.toFixed(2)}</td>
-                    <td className="px-4 py-2">{order.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Additional sections for notifications, payment tracking, etc., can be added here */}
         </div>
       </div>
     </>

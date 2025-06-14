@@ -93,13 +93,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       setFeedbackMessage('');
       setFeedbackOpen(false); // Close feedback modal
     } catch (error) {
-      setAlertMessage('Error submitting feedback: ' + error.message);
+      const errorMessage = (error instanceof Error) ? error.message : String(error);
+      setAlertMessage('Error submitting feedback: ' + errorMessage);
       setAlertType('error');
     } finally {
       setIsLoading(false); // Stop loading
     }
   };
 
+  if (loading) return <CustomLoader />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-purple-900 text-white relative">
@@ -215,7 +217,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       )}
 
       {/* Display alert message */}
-      {alertMessage && <CustomAlert message={alertMessage} type={alertType} />}
+      {alertMessage && <CustomAlert message={alertMessage} type={alertType ?? "info"} />}
       {/* Show loader if submitting */}
       {isLoading && <CustomLoader />}
     </div>

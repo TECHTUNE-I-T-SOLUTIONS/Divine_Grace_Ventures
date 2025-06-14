@@ -157,7 +157,7 @@ export default function AdminLoginPage() {
   return (
     <>
       {loading && <CustomLoader />}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
+      <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-30">
         <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md relative">
           <div className="absolute top-2 right-2">
             <button className="text-white text-xl" onClick={handleClose}>

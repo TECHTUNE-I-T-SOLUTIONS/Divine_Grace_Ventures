@@ -5,9 +5,14 @@ import CustomLoader from '@/components/CustomLoader';
 import NotificationCard from '@/components/NotificationCard';
 
 interface Notification {
-  id: string;
+  id: number;
   message: string;
-  // Add other fields as per your notification structure
+  user_id?: string;
+  email?: string;
+  type?: string;
+  order_id?: number;
+  amount?: number;
+  created_at: string;
 }
 
 export default function NotificationsPage() {

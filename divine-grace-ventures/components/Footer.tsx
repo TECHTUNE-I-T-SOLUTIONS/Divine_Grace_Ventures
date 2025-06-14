@@ -4,6 +4,7 @@
 import { FaFacebook, FaInstagram, FaTiktok, FaWhatsapp } from 'react-icons/fa';
 import { FaGithub, FaStackOverflow } from 'react-icons/fa';
 import { SiX } from 'react-icons/si'; // Import the X icon from react-icons/si
+import Link from 'next/link';
 
 export default function Footer() {
   return (
@@ -50,6 +51,16 @@ export default function Footer() {
         <p>
           We use cookies to enhance your experience. By continuing to visit this site, you agree to our use of cookies.
         </p>
+        <div className="flex flex-col items-center justify-between space-y-2 p-2">
+          <div className="flex space-x-4">
+            <Link href="/privacy-policy" className="text-sm text-gray-100 hover:underline">
+              Privacy Policy
+            </Link>
+            <Link href="/cookies-usage" className="text-sm text-gray-100 hover:underline">
+              Cookies Usage
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Copyright */}

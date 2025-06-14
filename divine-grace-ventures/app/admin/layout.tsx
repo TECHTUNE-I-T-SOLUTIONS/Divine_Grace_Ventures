@@ -2,11 +2,11 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import useSound from 'use-sound';
 import { useAuth } from '@/context/AuthContext';
-import Image from 'next/image';
 import { FaBars, FaSignOutAlt, FaUser, FaBell, FaCommentDots, FaRegCommentAlt, FaTachometerAlt, FaBoxOpen, FaClipboardList, FaCreditCard, FaTimes } from 'react-icons/fa';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -29,7 +29,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: '/admin/notifications', label: 'Notifications', icon: <FaBell size={20} /> },
     { href: '/admin/payments', label: 'Payments', icon: <FaCreditCard size={20} /> },
   ];
-
   // Fetch notifications and unread chats
   useEffect(() => {
     async function fetchNotifications() {
@@ -47,6 +46,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       } catch (err: unknown) {
         if (err instanceof Error) {
           console.error("Error fetching admin notifications:", err.message);
+        } else {
+          console.error("Error fetching admin notifications:", err);
         }
       }
     }
@@ -66,6 +67,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       } catch (err: unknown) {
         if (err instanceof Error) {
           console.error("Error fetching unread chats:", err.message);
+        } else {
+          console.error("Error fetching unread chats:", err);
         }
       }
     }
@@ -102,6 +105,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Logout error:", error.message);
+      } else {
+        console.error("Logout error:", error);
       }
       setShowLogoutConfirm(false);
     }
@@ -130,8 +135,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <button className="text-white lg:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
               <FaBars size={24} />
             </button>
-          <Image src="/images/logo.png" alt="Logo" width={32} height={32} className="rounded-lg" />
-          <span className="text-sm text-white font-bold sm:text-xl">Admin Panel</span>
+            <Image src="/images/logo.png" alt="Logo" width={32} height={32} className="h-8 w-8 rounded-lg" />
+            <span className="text-sm  text-white font-bold sm:text-xl">Admin Panel</span>
           </div>
           <div className="flex items-center space-x-2">
             <Link href="/admin/CreateAlert" title="Manage Alerts" passHref>
@@ -176,6 +181,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </header>
         <div className="flex flex-1">
           {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (Responsive) */}
           <aside className={`fixed pt-16 top-0 left-0 h-full bg-[linear-gradient(to_right,rgba(128,0,128,1)_0%,rgba(180,100,230,0)_100%)] opacity-90 text-white p-6 transition-all duration-300 transform z-50
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static
             lg:translate-x-0 h-full lg:w-64 lg:relative h-full`}>
@@ -190,7 +196,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <li key={link.href}>
                       <Link href={link.href}>
                         <button
-                          className={`w-full flex items-center space-x-2 px-4 py-2 rounded-full ${isActive ? 'bg-gray-700' : 'hover:bg-gray-700'}`}
+                          className={`w-full flex items-center space-x-2 px-4 py-2 rounded-full ${
+                            isActive ? 'bg-gray-700' : 'hover:bg-gray-700'
+                          }`}
                         >
                           {link.icon}
                           <span>{link.label}</span>
@@ -207,47 +215,54 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </ul>
             </nav>
           </aside>
-          <main className="flex-1 bg-gray-100 p-6">{children}</main>
-        </div>
+          {isSidebarOpen && (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-95 z-30 md:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+          )}
 
-        {/* Context Menu */}
-        {showMenu && (
-          <div
-            className="absolute z-50 bg-white border border-gray-300 rounded-lg shadow-lg"
-            style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
-          >
-            <ul className="py-2 px-3 text-sm">
-              {contextLinks.map((link, index) => (
-                <li key={index} className="cursor-pointer hover:bg-gray-100">
-                  {link.href ? (
-                    <Link href={link.href}>
-                      <a className="block py-2">{link.text}</a>
-                    </Link>
-                  ) : (
-                    <button
-                      className="block py-2"
-                      onClick={link.action}
-                    >
-                      {link.text}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {/* Logout Confirmation */}
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-60">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
-              <h3 className="text-lg font-semibold text-center">Are you sure you want to log out?</h3>
-              <div className="flex justify-between mt-4">
-                <button onClick={cancelLogout} className="px-4 py-2 bg-gray-300 rounded-md">Cancel</button>
-                <button onClick={confirmLogout} className="px-4 py-2 bg-red-600 text-white rounded-md">Logout</button>
+          {/* Main Content */}
+          <div className="flex-1 p-4">{children}</div>
+          
+          {/* Right-click Context Menu */}
+          {showMenu && (
+            <div className="absolute z-50 bg-white shadow-lg rounded-md" style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}>
+              <ul className="space-y-2 p-3">
+                {contextLinks.map((link, index) => (
+                  <li key={index} className="cursor-pointer hover:text-blue-500">
+                    {link.href ? (
+                      <Link href={link.href}>{link.text}</Link>
+                    ) : (
+                      <button onClick={link.action}>{link.text}</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Logout Confirmation Modal */}
+          {showLogoutConfirm && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-purple-800 rounded-lg p-6 w-full max-w-sm">
+                <h2 className="text-xl text-center text-white font-bold mb-4">Confirm Logout</h2>
+                <p className="mb-4 text-red-300 text-center font-bold">Are you sure you want to log out?</p>
+                <div className="flex justify-end space-x-36">
+                  <button 
+                    onClick={cancelLogout}
+                    className=" px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={confirmLogout}
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

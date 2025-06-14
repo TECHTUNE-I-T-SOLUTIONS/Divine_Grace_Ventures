@@ -17,11 +17,11 @@ export default function CustomLoader() {
       });
     }, 500);
     return () => clearInterval(interval);
-  }, []);  // No need to include letters in the dependency array
+  }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-40">
-      <div className="text-5xl font-extrabold text-white animate-pulse">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-40 pointer-events-none">
+      <div className="text-5xl font-extrabold text-white animate-pulse pointer-events-auto">
         {displayText}
       </div>
     </div>
