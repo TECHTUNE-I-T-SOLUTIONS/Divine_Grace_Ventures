@@ -1,29 +1,42 @@
 // lib/sendEmail.ts
-import nodemailer from 'nodemailer';
+import emailjs from '@emailjs/nodejs';
 
-export async function sendEmail(to: string, subject: string, htmlContent: string) {
-  // Create a transporter using your email service's SMTP server
-  const transporter = nodemailer.createTransport({
-    service: 'gmail', // or use another service like Outlook, SMTP, etc.
-    auth: {
-      user: process.env.EMAIL_FROM,  // Your email address
-      pass: process.env.EMAIL_PASSWORD,  // Your email password or app-specific password
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,  // Sender's email
-    to: to,  // Recipient's email
-    subject: subject,
-    html: htmlContent,  // HTML content for email design
-  };
+/**
+ * Sends an email using a single generic EmailJS template with dynamic subject and message.
+ *
+ * @param to - The recipient's email address
+ * @param subject - The subject line of the email
+ * @param message - The main message body (HTML or text)
+ */
+export async function sendEmail(to: string, subject: string, message: string) {
+  if (
+    !process.env.EMAILJS_SERVICE_ID ||
+    !process.env.EMAILJS_PUBLIC_KEY ||
+    !process.env.EMAILJS_PRIVATE_KEY ||
+    !process.env.GENERIC_TEMPLATE_ID
+  ) {
+    throw new Error('Missing required EmailJS environment variables');
+  }
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info);
-    return info;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
+    const response = await emailjs.send(
+      process.env.EMAILJS_SERVICE_ID,
+      process.env.GENERIC_TEMPLATE_ID, // Reuse password reset/OTP template
+      {
+        to_email: to,
+        subject,
+        message,
+      },
+      {
+        publicKey: process.env.EMAILJS_PUBLIC_KEY,
+        privateKey: process.env.EMAILJS_PRIVATE_KEY,
+      }
+    );
+
+    console.log(`Email successfully sent to ${to} via EmailJS`);
+    return { success: true, response };
+  } catch (err) {
+    console.error('EmailJS failed to send email:', err);
+    throw new Error('EmailJS failed to send email');
   }
 }

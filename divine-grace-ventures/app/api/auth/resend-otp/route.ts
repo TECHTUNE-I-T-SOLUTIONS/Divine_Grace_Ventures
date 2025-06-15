@@ -1,3 +1,4 @@
+// app/api/resend-otp/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import { sendOtpEmail } from '@/lib/emailService';
@@ -9,36 +10,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Generate a new OTP
+    // Generate OTP
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Update OTP in the database
+    // Update user record
     const { error } = await supabase
       .from('users')
-      .update({ otp: newOtp, otp_expires_at: otpExpiresAt })
+      .update({ otp: newOtp, otp_expires_at: otpExpiresAt.toISOString() })
       .eq('email', email);
 
     if (error) {
       return NextResponse.json({ error: 'Failed to update OTP' }, { status: 500 });
     }
 
-    // Send OTP email
-    const emailResponse = await sendOtpEmail(email, newOtp);
-    if (!emailResponse.success) {
+    // Send OTP email (with fallback)
+    const emailResult = await sendOtpEmail(email, newOtp);
+
+    if (!emailResult.success) {
       return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 });
     }
 
     return NextResponse.json({ message: 'A new OTP has been sent successfully.' });
-  } catch (err: unknown) {  // Use 'unknown' instead of 'any'
+  } catch (err: unknown) {
     console.error('Resend OTP error:', err);
-    
-    if (err instanceof Error) {
-      // If the error is an instance of Error, you can access error.message
-      return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-
-    // Fallback if the error is not an instance of Error
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 });
   }
 }

@@ -8,6 +8,8 @@ import CustomAlert from '@/components/CustomAlert';
 import CustomLoader from '@/components/CustomLoader';
 import { FaTimes } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
+import SignupForm from '@/components/auth/SignupForm';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -68,43 +70,6 @@ export default function AuthPage() {
     }
   };
 
-  const sendOtp = async () => {
-    // if (!recaptchaToken) {
-    //   setAlert({ type: 'error', message: 'Please complete the reCAPTCHA.' });
-    //   return;
-    // }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          username: email.split('@')[0],
-          password,
-          // recaptchaToken,
-          phone,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAlert({ type: 'error', message: data.error || 'Failed to send OTP.' });
-        setLoading(false);
-        return;
-      }
-      setAlert({ type: 'info', message: 'OTP sent to your email/phone.' });
-      setOtpSent(true);
-      setActiveView('otp');
-      setLoading(false);
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-          setAlert({ type: 'error', message: error.message || 'Error sending OTP.' });
-        } else {
-            setAlert({ type: 'error', message: 'An unknown error occurred' });
-            setLoading(false);
-        }
-      }
-  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,31 +107,6 @@ export default function AuthPage() {
             setLoading(false);
         }
       }
-  };
-
-    const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAlert(null);
-    setLoading(true);
-    try {
-      const res = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setAlert({ type: 'error', message: data.error || 'Failed to send reset link.' });
-      } else {
-        setAlert({ type: 'success', message: 'Password reset link sent to your email.' });
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setAlert({ type: 'error', message: error.message || 'An error occurred.' });
-      }
-    } finally {
-      setLoading(false);
-    }
   };
 
 
@@ -225,95 +165,6 @@ export default function AuthPage() {
     </div>
   );
   
-  const renderSignup = () => (
-    <div className="relative">
-      {renderCloseButton()}
-      <h2 className="text-2xl font-bold text-white mb-4 text-center">Sign Up</h2>
-      {alert && <CustomAlert type={alert.type} message={alert.message} />}
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div>
-          <label htmlFor="signup-email" className="block mb-1 text-white">Email</label>
-          <input
-            id="signup-email"
-            type="email"
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="signup-phone" className="block mb-1 text-white">Phone Number (include the country code)</label>
-          <input
-            id="signup-phone"
-            type="text"
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g., +234xxxxxxxxxx (make sure to include +234)"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="signup-password" className="block mb-1 text-white">Password</label>
-          <input
-            id="signup-password"
-            type="password"
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="signup-confirm-password" className="block mb-1 text-white">Confirm Password</label>
-          <input
-            id="signup-confirm-password"
-            type="password"
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
-        {/* <div className="flex justify-center">
-          <ReCAPTCHA
-            sitekey="6Lcq9tUqAAAAAMPhI0XmKhFm6nNmxaWCtbuElU5C"
-            onChange={(token: string | null) => setRecaptchaToken(token || '')}
-          />
-        </div> */}
-        {!otpSent && (
-          <button
-            type="button"
-            title="Send OTP"
-            onClick={sendOtp}
-            className="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600"
-          >
-            Send OTP
-          </button>
-        )}
-        {otpSent && (
-          <button
-            type="button"
-            title="Confirm OTP"
-            onClick={() => setActiveView('otp')}
-            className="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600"
-          >
-            Confirm OTP
-          </button>
-        )}
-      </form>
-      <div className="mt-4 text-center">
-        <p className="text-white">
-          Already have an account?{' '}
-          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline"
-          title="Login">
-            Login
-          </button>
-        </p>
-      </div>
-    </div>
-  );
 
   // Function to resend OTP
   const handleResendOtp = async () => {
@@ -392,50 +243,35 @@ export default function AuthPage() {
   const renderForgot = () => (
     <div className="relative">
       {renderCloseButton()}
-      <h2 className="text-2xl text-white font-bold mb-4 text-center">Forgot Password</h2>
-      {alert && <CustomAlert type={alert.type} message={alert.message} />}
-      <form onSubmit={handleForgotPassword} className="space-y-4">
-        <div>
-          <label htmlFor="forgot-email" className="block mb-1 text-white">Email</label>
-          <input
-            id="forgot-email"
-            type="email"
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600"
-        title="Reset Password">
-          Reset Password
-        </button>
-      </form>
-      <div className="mt-4 text-center">
-        <p className="text-white">
-          Remembered your password?{' '}
-          <button onClick={() => { setActiveView('login'); setAlert(null); }} className="text-blue-400 hover:underline"
-          title="Login">
-            Login
-          </button>
-        </p>
-        <p className="mt-2 text-white">
-          Don&apos;t have an account?{' '}
-          <button onClick={() => { setActiveView('signup'); setAlert(null); }} className="text-blue-400 hover:underline"
-          title="Sign Up">
-            Sign Up
-          </button>
-        </p>
-      </div>
+      <ForgotPasswordForm
+        onBackToLogin={() => { setActiveView('login'); setAlert(null); }}
+        onSwitchToSignup={() => { setActiveView('signup'); setAlert(null); }}
+      />
     </div>
   );
-
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-800 bg-opacity-90">
       <div className="bg-gray-900 p-8 rounded-lg w-full max-w-md relative">
         {activeView === 'login' && renderLogin()}
-        {activeView === 'signup' && renderSignup()}
+        {activeView === 'signup' && (
+          <SignupForm
+            email={email}
+            setEmail={setEmail}
+            phone={phone}
+            setPhone={setPhone}
+            password={password}
+            setPassword={setPassword}
+            confirmPassword={confirmPassword}
+            setConfirmPassword={setConfirmPassword}
+            otpSent={otpSent}
+            setOtpSent={setOtpSent}
+            setActiveView={setActiveView}
+            alert={alert}
+            setAlert={setAlert}
+            setLoading={setLoading}
+          />
+        )}
         {activeView === 'otp' && renderOtp()}
         {activeView === 'forgot' && renderForgot()}
         {loading && <CustomLoader />}

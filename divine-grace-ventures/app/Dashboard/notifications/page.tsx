@@ -20,25 +20,36 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function fetchNotifications() {
-      try {
-        const res = await fetch('/api/notifications', { credentials: 'include' });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
-        setNotifications(data.notifications);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('An unexpected error occurred');
-        }
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  async function fetchNotifications() {
+    try {
+      // Optional: fetch session if you want to check authentication
+      const sessionRes = await fetch('/api/session');
+      const sessionData = await sessionRes.json();
+
+      if (!sessionRes.ok || !sessionData.user?.id) {
+        throw new Error('User not authenticated');
       }
+
+      // Fetch notifications directly from the updated API route
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch notifications');
+      setNotifications(data.notifications);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
-    fetchNotifications();
-  }, []);
+  }
+
+  fetchNotifications();
+}, []);
 
   if (loading) return <CustomLoader />;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;

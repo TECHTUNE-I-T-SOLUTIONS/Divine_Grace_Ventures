@@ -1,9 +1,9 @@
+// app/api/forgot/route.ts
 import { NextResponse, type NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabaseClient';
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/sendEmail'; // ✅ Import reusable email sender
 
-// Helper function to generate a temporary password (or OTP)
 function generateTempPassword(length = 8): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let tempPassword = '';
@@ -13,17 +13,6 @@ function generateTempPassword(length = 8): string {
   return tempPassword;
 }
 
-// Configure Nodemailer transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
@@ -32,7 +21,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing email' }, { status: 400 });
     }
 
-    // Retrieve the user record from "users" table
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
@@ -43,44 +31,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Generate a temporary password
     const tempPassword = generateTempPassword(8);
-    const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-    // Update the user's password with the temporary one
     const { error: updateError } = await supabase
       .from('users')
-      .update({ hashed_password: hashedTempPassword })
+      .update({ hashed_password: hashedPassword })
       .eq('email', email);
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    // Prepare the email
-    const mailOptions = {
-      from: process.env.EMAIL_FROM,
-      to: email,
-      subject: 'Password Reset - Divine Grace Ventures',
-      text: `Your temporary password is: ${tempPassword}. Please log in and change your password immediately.`,
-    };
+    // ✅ Use the shared sendEmail function
+    const subject = 'Password Reset';
+    const htmlMessage = `
+      <p>We received a request to reset your password.</p>
+      <p>Your new password is: <strong>${tempPassword}</strong></p>
+      <p>Please keep it safe and secure as we're not liable for any unauthorised actions performed on your account as a result of this</p>
+      <p>Moreover, we'll do our best to keep your account safe</p>
+      <p>Regards,<br>Divine Grace Ventures Team</p>
+    `;
 
-    // Send the email
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (mailError) {
-      if (mailError instanceof Error) {
-        return NextResponse.json({ error: mailError.message }, { status: 500 });
-      }
-      return NextResponse.json({ error: 'Failed to send email due to unknown error' }, { status: 500 });
+    const result = await sendEmail(email, subject, htmlMessage);
+
+    if (!result.success) {
+      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
     }
 
-    // Optional: Add an SMS/OTP step if needed
-
-    return NextResponse.json({ message: 'Temporary password sent to your email' });
-
-  } catch (error) {
-    console.error('Unexpected error in forgot password flow:', error);
+    return NextResponse.json({ message: 'Temporary password sent to your email.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
